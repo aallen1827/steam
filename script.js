@@ -693,13 +693,14 @@ function buy(machine) {
     }
 
     if (resources[machine.costType] >= machine.cost) {
-    function canAfford(machine) {
-        return (
-            machine &&
-            Number.isFinite(resources[machine.costType]) &&
-            Number.isFinite(machine.cost) &&
-            resources[machine.costType] >= machine.cost
-        );
+        function canAfford(machine) {
+            return (
+                machine &&
+                Number.isFinite(resources[machine.costType]) &&
+                Number.isFinite(machine.cost) &&
+                resources[machine.costType] >= machine.cost
+            );
+        }
     }
     if (canAfford(machine)) {
         resources[machine.costType] -= machine.cost;
