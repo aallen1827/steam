@@ -60,7 +60,8 @@ machines = [
         inputAmount: 0,
         outputType: "water",
         outputAmount: 2,
-        active: true
+        active: true,
+        efficiency: 1
     },
     {
         name: "Boiler",
@@ -72,8 +73,9 @@ machines = [
         inputType: "water",
         inputAmount: 1,
         outputType: "steam",
-        outputAmount: 1,
-        active: true
+        outputAmount: 4,
+        active: true,
+        efficiency: 1
     },
     {
         name: "Mine",
@@ -86,7 +88,8 @@ machines = [
         inputAmount: 1,
         outputType: "metal",
         outputAmount: 2,
-        active: true
+        active: true,
+        efficiency: 1
     },
     {
         name: "Smelter",
@@ -99,7 +102,8 @@ machines = [
         inputAmount: 1,
         outputType: "metal",
         outputAmount: 2,
-        active: true
+        active: true,
+        efficiency: 1
     },
     {
         name: "Greenhouse",
@@ -112,7 +116,8 @@ machines = [
         inputAmount: 2,
         outputType: "oxygen",
         outputAmount: 2,
-        active: true
+        active: true,
+        efficiency: 1
     }
     
 ]
@@ -145,6 +150,9 @@ function runMachine(machine) {
     if (!machine.bought || !machine.active) {
         return;
     }
+    if (resources[machine.outputType] >= max) {
+        return;
+    }
 
     if (machine.inputType !== null) {
         if (resources[machine.inputType] < machine.inputAmount) {
@@ -152,9 +160,10 @@ function runMachine(machine) {
         }
         resources[machine.inputType] -= machine.inputAmount;
     }
-    if (resources[machine.outputType] < max) {
-        resources[machine.outputType] += machine.outputAmount;
-    }
+    resources[machine.outputType] = Math.min(
+        resources[machine.outputType] + machine.outputAmount,
+        max
+    )
 }
 
 function loadResource() {
@@ -188,12 +197,27 @@ function placeMachine(tile) {
 
 //SPENDING ------------------------------------------------------------------
 function buy(machine) {
+    if (!machine || machine.bought) {
+        return;
+    }
+
     if (resources[machine.costType] >= machine.cost) {
         resources[machine.costType] -= machine.cost;
-        machine.location.innerHTML = `<img src="images/${machine.name}.png"></img>`;
-        machineOrder += 1;
-        buyButton.textContent = `Buy ${machine.nextBuy} for ${machines[machineOrder].cost} ${machines[machineOrder].costType}`;
+
+        machine.location.innerHTML = `<img src="images/${machine.name}.png">`;
         machine.bought = true;
+
+        machineOrder += 1;
+
+        if (machineOrder < machines.length) {
+            let nextMachine = machines[machineOrder];
+
+            buyButton.textContent = `Buy ${nextMachine.name} for ${nextMachine.cost} ${nextMachine.costType}`;
+        } else {
+            buyButton.textContent = "All machines purchased";
+            buyButton.disabled = true;
+        }
+
         loadResource();
     }
 }
