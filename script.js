@@ -1364,7 +1364,7 @@ function closeAlert() {
 
         showAlert(
             "How to Play",
-            "Use the Machine Shop to purchase machines. Select an empty tile to place a purchased machine. Machines produce resources over time, but some require steam from a Boiler."
+            "Use the Machine Shop to purchase machines. Select an empty tile to place a purchased machine. Machines produce resources over time, but some require steam from a Boiler. Use valve control to increase production speed. Use Warehouse Storage to free up space for new materials."
         );
 
         return;
