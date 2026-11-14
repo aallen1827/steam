@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,36 +9,120 @@
     <script src="script.js" defer></script>
     <script src="scriptWard.js" defer></script>
 </head>
+
 <body>
     <main>
-        <div id="stageDisplay"></div>
-        <div id="resourceBar"></div>
-        <div id="steam"></div>
 
-        <button id="resourceButton">Manage Resources</button>
-        <div id="resourceMenu" style="display: none;">
-            <h2>Resource Allocation</h2>
-            <p>Drop:</p>
-            <button id="water">Water</button>
-            <button id="ore">Ore</button>
-            <button id="metal">Metal</button>
-            <button id="oxygen">Oxygen</button>
-            <button id="closeResource">Close</button>
+        <!-- MAIN GAME LAYOUT -->
+        <div id="gameLayout">
+
+            <!-- LEFT COLUMN -->
+            <div id="gameArea">
+
+                <!-- RESOURCES -->
+                <section id="resourcePanel">
+                    <div id="resourceBar"></div>
+                    <div id="steam"></div>
+                </section>
+
+                <!-- GAME GRID -->
+                <div id="map">
+                    <div class="tile" id="tile1" data-tile-id="0"></div>
+                    <div class="tile" id="tile2" data-tile-id="1"></div>
+                    <div class="tile" id="tile3" data-tile-id="2"></div>
+                    <div class="tile" id="tile4" data-tile-id="3"></div>
+                    <div class="tile" id="tile5" data-tile-id="4"></div>
+
+                    <div class="tile" id="tile6" data-tile-id="5"></div>
+                    <div class="tile" id="tile7" data-tile-id="6"></div>
+                    <div class="tile" id="tile8" data-tile-id="7"></div>
+                    <div class="tile" id="tile9" data-tile-id="8"></div>
+                    <div class="tile" id="tile10" data-tile-id="9"></div>
+
+                    <div class="tile" id="tile11" data-tile-id="10"></div>
+                    <div class="tile" id="tile12" data-tile-id="11"></div>
+                    <div class="tile" id="tile13" data-tile-id="12"></div>
+                    <div class="tile" id="tile14" data-tile-id="13"></div>
+                    <div class="tile" id="tile15" data-tile-id="14"></div>
+
+                    <div class="tile" id="tile16" data-tile-id="15"></div>
+                    <div class="tile" id="tile17" data-tile-id="16"></div>
+                    <div class="tile" id="tile18" data-tile-id="17"></div>
+                    <div class="tile" id="tile19" data-tile-id="18"></div>
+                    <div class="tile" id="tile20" data-tile-id="19"></div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <aside id="gameSidebar">
+
+                <!-- STAGE INFORMATION -->
+                <section class="info-panel">
+                    <div id="stageDisplay"></div>
+                </section>
+
+                <!-- RESOURCE MANAGEMENT BUTTON -->
+                <button id="resourceButton" class="sidebar-button">
+                    Manage Resources
+                </button>
+
+                <!-- STEAM MANAGEMENT BUTTON -->
+                <button id="steamButton" class="sidebar-button">
+                    Manage Steam
+                </button>
+
+                <!-- MACHINE SHOP BUTTON -->
+                <div id="buttons">
+                    <button id="buy" class="sidebar-button">
+                        Open Shop
+                    </button>
+                </div>
+
+                <!-- TERRAFORMING PROGRESS -->
+                <section class="info-panel">
+                    <div id="terraformProgress"></div>
+                </section>
+
+            </aside>
+
         </div>
-        
-        <button id="steamButton">Manage Steam</button>
 
-        <div id="steamMenu" style="display: none;">
-            <h2>Steam Allocation</h2>
+        <!-- POPUP MENUS -->
+
+        <!-- RESOURCE MENU -->
+        <div id="resourceMenu" class="shop-menu" hidden>
+            <div class="shop-header">
+                <h2>Manage Resources</h2>
+                <button id="closeResource">Close</button>
+            </div>
+
+            <h3>Warehouse Storage</h3>
+            <p id="storageInfo"></p>
+
+            <h3>Discard Resources</h3>
+
+            <div class="resource-options">
+                <button id="water">Discard 10 Water</button>
+                <button id="ore">Discard 10 Ore</button>
+                <button id="metal">Discard 10 Metal</button>
+                <button id="oxygen">Discard 10 Oxygen</button>
+            </div>
+        </div>
+
+        <!-- STEAM MENU -->
+        <div id="steamMenu" class="shop-menu" hidden>
+            <div class="shop-header">
+                <h2>Manage Steam</h2>
+                <button id="closeSteam">Close</button>
+            </div>
+
             <p id="steamDisplay"></p>
+
             <div id="steamControls"></div>
-            <button id="closeSteam">Close</button>
         </div>
-        
-        <div id="buttons">
-            <button id="buy">Open Shop</button>
-        </div>
-        
+
+        <!-- MACHINE SHOP -->
         <div id="shopMenu" class="shop-menu" hidden>
             <div class="shop-header">
                 <h2>Machine Shop</h2>
@@ -47,40 +132,21 @@
             <div id="shopItems" class="shop-items"></div>
         </div>
 
-        <div id="terraformProgress"></div>
-        <div id="map">
-            <div class="tile" id="tile1" data-tile-id="0"></div>
-            <div class="tile" id="tile2" data-tile-id="1"></div>
-            <div class="tile" id="tile3" data-tile-id="2"></div>
-            <div class="tile" id="tile4" data-tile-id="3"></div>
-            <div class="tile" id="tile5" data-tile-id="4"></div>
-            <div class="tile" id="tile6" data-tile-id="5"></div>
-            <div class="tile" id="tile7" data-tile-id="6"></div>
-            <div class="tile" id="tile8" data-tile-id="7"></div>
-            <div class="tile" id="tile9" data-tile-id="8"></div>
-            <div class="tile" id="tile10" data-tile-id="9"></div>
-            <div class="tile" id="tile11" data-tile-id="10"></div>
-            <div class="tile" id="tile12" data-tile-id="11"></div>
-            <div class="tile" id="tile13" data-tile-id="12"></div>
-            <div class="tile" id="tile14" data-tile-id="13"></div>
-            <div class="tile" id="tile15" data-tile-id="14"></div>
-            <div class="tile" id="tile16" data-tile-id="15"></div>
-            <div class="tile" id="tile17" data-tile-id="16"></div>
-            <div class="tile" id="tile18" data-tile-id="17"></div>
-            <div class="tile" id="tile19" data-tile-id="18"></div>
-            <div class="tile" id="tile20" data-tile-id="19"></div>
-        </div>
+        <!-- TILE ACTION MENU -->
         <div class="tile-menu-popup" id="tile-menu-popup">
             <button data-action="upgrade">upgrade</button>
             <button data-action="place">place</button>
             <button data-action="remove">remove</button>
             <button data-action="close">close menu</button>
         </div>
+
+        <!-- UNPLACED MACHINE MENU -->
         <div class="tile-menu-popup" id="unplaced-machine-menu">
             <h3>Place Machine</h3>
-
             <div id="unplaced-machine-list"></div>
         </div>
+
+        <!-- GAME ALERT -->
         <div id="gameAlert" class="game-alert" hidden>
             <div class="alert-content">
                 <h2 id="alertTitle"></h2>
@@ -88,6 +154,7 @@
                 <button id="alertClose">Continue</button>
             </div>
         </div>
+
     </main>
 </body>
 </html>
