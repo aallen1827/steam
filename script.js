@@ -273,6 +273,9 @@ machines = [
 const builtMachines = [];
 
 const unplacedMachines = [];
+
+const MAX_MACHINES_PER_TYPE = 3;
+
 let nextMachineId = 1;
 
 var play = true;
@@ -416,6 +419,81 @@ function loadUnplacedMachineMenu(){
     });
 }
 
+function enforceStorageCapacity() {
+    let excessResources =
+        getStorageUsed() - storage.capacity;
+
+    if (excessResources <= 0) {
+        return;
+    }
+
+    const resourceOrder = [
+        "water",
+        "ore",
+        "metal",
+        "oxygen"
+    ];
+
+    for (const resource of resourceOrder) {
+        if (excessResources <= 0) {
+            break;
+        }
+
+        const amountToRemove = Math.min(
+            resources[resource],
+            excessResources
+        );
+
+        resources[resource] -= amountToRemove;
+        excessResources -= amountToRemove;
+    }
+}
+
+function enforceSteamCapacity() {
+    let remainingSteam = steam.capacity;
+
+    builtMachines.forEach(machine => {
+        const allowedSteam = Math.min(
+            machine.steamAllocated,
+            remainingSteam
+        );
+
+        machine.steamAllocated = Math.max(
+            0,
+            allowedSteam
+        );
+
+        remainingSteam -= machine.steamAllocated;
+    });
+}
+
+function restoreSteamAllocations() {
+    let availableSteam =
+        steam.capacity - getAllocatedSteam();
+
+    if (availableSteam <= 0) {
+        return;
+    }
+
+    builtMachines.forEach(machine => {
+        if (
+            machine.steamRequired <= 0 ||
+            availableSteam <= 0
+        ) {
+            return;
+        }
+
+        const steamNeeded =
+            machine.steamRequired - machine.steamAllocated;
+
+        const steamToAdd =
+            Math.min(steamNeeded, availableSteam);
+
+        machine.steamAllocated += steamToAdd;
+        availableSteam -= steamToAdd;
+    });
+}
+
 function placeUnplacedMachine(machineId){
     const selectedTile = document.querySelector("#map .tile.selected");
 
@@ -450,17 +528,11 @@ function placeUnplacedMachine(machineId){
     unplacedMachines.splice(machineIndex, 1);
     builtMachines.push(machine);
 
-    if (machine.name === "Boiler") {
-        steam.capacity = Math.min(steam.capacity + 10, 30);
-    }
-
-    if (machine.name === "Warehouse") {
-        storage.capacity = Math.min(
-            storage.capacity + machine.storageBonus,
-            storage.maxCapacity
-        );
-    }
-
+    recalculateBuildingCapacities();
+    enforceSteamCapacity();
+    enforceStorageCapacity();
+    restoreSteamAllocations();
+    refreshAllPipes();
     loadResource();
 
     console.log(`${machine.name} placed on ${selectedTile.id}`);
@@ -515,38 +587,81 @@ function placeSelectedMachine(){
     placeMachine(selectedTile);
 }
 
-function removeSelectedMachine(){
-    const selectedTile = document.querySelector("#map .tile.selected");
+function removeSelectedMachine() {
+    const selectedTile =
+        document.querySelector("#map .tile.selected");
 
-    if (!selectedTile){
+    if (!selectedTile) {
         console.log("Select a tile before removing a machine");
-        return;
+        return false;
     }
 
     const machine = builtMachines.find(machine =>
         machine.location === selectedTile &&
-        machine.placed ===true
+        machine.placed === true
     );
 
-    if (!machine){
+    if (!machine) {
         console.log("There is no machine on this tile");
-        return;
+        return false;
     }
-    
-    selectedTile.innerHTML = "";
 
+    selectedTile.innerHTML = "";
     delete selectedTile.dataset.occupied;
 
+    // Reset the machine's placement and steam allocation
     machine.location = null;
     machine.placed = false;
+    machine.steamAllocated = 0;
 
-    const machineIndex = builtMachines.indexOf(machine);
+    const machineIndex =
+        builtMachines.indexOf(machine);
 
-    if (machineIndex !== -1){
+    if (machineIndex !== -1) {
         builtMachines.splice(machineIndex, 1);
     }
 
-    console.log(`${machine.name} removed from ${selectedTile.id}`);
+    // Return it to the unplaced machine menu
+    unplacedMachines.push(machine);
+
+    recalculateBuildingCapacities();
+    enforceSteamCapacity();
+    enforceStorageCapacity();
+    refreshAllPipes();
+    loadResource();
+
+    console.log(
+        `${machine.name} returned to the unplaced machine menu`
+    );
+
+    return true;
+}
+
+function recalculateBuildingCapacities() {
+    const boilerCount = builtMachines.filter(machine =>
+        machine.name === "Boiler"
+    ).length;
+
+    const warehouseCount = builtMachines.filter(machine =>
+        machine.name === "Warehouse"
+    ).length;
+
+    const warehouseType = machines.find(machine =>
+        machine.name === "Warehouse"
+    );
+
+    const warehouseBonus =
+        warehouseType?.storageBonus ?? 0;
+
+    steam.capacity = Math.min(
+        boilerCount * 10,
+        30
+    );
+
+    storage.capacity = Math.min(
+        30 + warehouseCount * warehouseBonus,
+        storage.maxCapacity
+    );
 }
 
 function openShop(){
@@ -568,9 +683,14 @@ function loadShop(){
         const stageRequirementMet = 
             isUnlocked(machine);
 
+        const machineCount = getMachineCount(machine.name);
+
+        const machineLimitReached = machineCount >= MAX_MACHINES_PER_TYPE;
+
         const machineAvailable = 
             hasEnoughResources &&
-            stageRequirementMet;
+            stageRequirementMet &&
+            !machineLimitReached;
 
         const machineEntry = document.createElement("button");
 
@@ -583,6 +703,7 @@ function loadShop(){
                 <h3>${formatMachineName(machine.name)}</h3>
                 <p>Cost: ${machine.cost} ${machine.costType}</p>
                 <p>Stage required: ${machine.stageRequired}</p>
+                <p>Owned: ${machineCount} / ${MAX_MACHINES_PER_TYPE}</p>
             </div>
 
             <div class="shop-image">
@@ -770,6 +891,10 @@ function buy(machine) {
         return;
     }
 
+    if(getMachineCount(machine.name) >= MAX_MACHINES_PER_TYPE){
+        return;
+    }
+
     if (!isUnlocked(machine)) {
         return;
     }
@@ -787,6 +912,17 @@ function buy(machine) {
     loadResource();
 }
 
+function getMachineCount(machineName) {
+    const placedCount = builtMachines.filter(machine =>
+        machine.name === machineName
+    ).length;
+
+    const unplacedCount = unplacedMachines.filter(machine =>
+        machine.name === machineName
+    ).length;
+
+    return placedCount + unplacedCount;
+}
 function createMachineInstance(machineType) {
     return {
         ...machineType,
@@ -944,32 +1080,55 @@ function winGame() {
 
 //DISPLAY PIPES ----------------------------------------------------------
 function checkNeighbors(tile) {
-    const tiles = [...document.querySelectorAll("#map .tile")];
+    const tiles = [
+        ...document.querySelectorAll("#map .tile")
+    ];
 
     const index = tiles.indexOf(tile);
     const columns = 5;
 
-    const neighbors = {
-        top: index - columns,
-        bottom: index + columns,
-        left: index % columns !== 0 ? index - 1 : -1,
-        right: index % columns !== columns - 1 ? index + 1 : -1
-    };
-
-    for (let direction in neighbors) {
-        const neighborIndex = neighbors[direction];
-
-        if (neighborIndex < 0 || neighborIndex >= tiles.length) {
-            continue;
-        }
-
-        const neighbor = tiles[neighborIndex];
-
-        // Check whether neighboring tile contains a machine image
-        if (neighbor.dataset.occupied === "true") {
-            createPipe(tile, direction);
-        }
+    if (index === -1) {
+        return;
     }
+
+    const rightIndex = index + 1;
+    const bottomIndex = index + columns;
+
+    // Create only one horizontal pipe per connection
+    if (
+        index % columns !== columns - 1 &&
+        tiles[rightIndex].dataset.occupied === "true"
+    ) {
+        createPipe(tile, "right");
+    }
+
+    // Create only one vertical pipe per connection
+    if (
+        bottomIndex < tiles.length &&
+        tiles[bottomIndex].dataset.occupied === "true"
+    ) {
+        createPipe(tile, "bottom");
+    }
+}
+
+function refreshAllPipes() {
+    const tiles = [
+        ...document.querySelectorAll("#map .tile")
+    ];
+
+    // Remove every existing pipe
+    tiles.forEach(tile => {
+        tile.querySelectorAll(".pipe").forEach(pipe => {
+            pipe.remove();
+        });
+    });
+
+    // Recreate pipes based on the current map
+    tiles.forEach(tile => {
+        if (tile.dataset.occupied === "true") {
+            checkNeighbors(tile);
+        }
+    });
 }
 
 function createPipe(tile, direction) {

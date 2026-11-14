@@ -139,20 +139,19 @@ tileMenu.addEventListener("click", function(event){
         return;
     }
 
-    if(action === "place"){
-        placeSelectedMachine();
-        closeTileMenu();
-    }
+    if (action === "remove") {
+    const selectedTile =
+        grid.querySelector(".tile.selected");
 
-    if (action === "remove"){
+    const removed =
         removeSelectedMachine();
-        closeTileMenu();
-        return;
+
+    if (removed && selectedTile) {
+        showUnplacedMachineMenu(selectedTile);
     }
 
-    if (action === "inspect"){
-        inspectSelectedTile();
-    }
+    return;
+}
     
 })
 
