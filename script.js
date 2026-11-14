@@ -56,6 +56,7 @@ var gameStage = 1;
 
 var max = 20;
 
+var machineToPlace = null;
 
 //-------------------------------- Test Event Listeners ----------------------------
 a1.addEventListener("click", () => {
@@ -254,6 +255,8 @@ machines = [
 const builtMachines = []
 var machineOrder = 0;
 
+updateBuyButton();
+
 var play = true;
 
 //resource incrementing
@@ -282,7 +285,7 @@ function addResource(resource) {
 }
 
 function runMachine(machine) {
-    if (!machine.bought || !machine.active) {
+    if (!machine.bought || !machine.placed || !machine.active) {
         return;
     }
 
@@ -365,7 +368,47 @@ timePass();
 //place machine
 function placeMachine(tile) {
     //change tile img src to match machine
+    if (!tile || !machineToPlace){
+        console.log("There is no machine waiting to be placed.");
+        return;
+    }
 
+    if(tile.dataset.occupied === "true"){
+        console.log("That tile is already occupied");
+        return;
+    }
+
+    const machine = machineToPlace;
+
+    tile.innerHTML = `<img src="images/${machine.name}.png" alt="${machine.name}">`;
+    
+    tile.dataset.occupied = "true";
+
+    machine.location = tile;
+    machine.placed = true;
+
+    builtMachines.push(machine);
+
+    machineToPlace = null;
+
+    machineOrder +=1;
+
+    updateBuyButton();
+    loadResource();
+
+    console.log(`${machine.name} placed on ${tile.id}`);
+
+}
+
+function placeSelectedMachine(){
+    const selectedTile = document.querySelector("#map .tile.selected");
+
+    if (!selectedTile){
+        console.log("Select a tile before placing a machine.");
+        return;
+    }
+
+    placeMachine(selectedTile);
 }
 
 
@@ -515,21 +558,23 @@ discWater.addEventListener("click", () => {
 
 //SPENDING ------------------------------------------------------------------
 function buy(machine) {
-    if (!machine || machine.bought) {
+    if (!machine || machine.bought || machineToPlace) {
         return;
     }
 
     if (resources[machine.costType] >= machine.cost) {
         resources[machine.costType] -= machine.cost;
 
-        machine.location.innerHTML = `<img src="images/${machine.name}.png">`;
         machine.bought = true;
+        machine.placed = false;
         if (steamMenu.style.display === "block") {
             loadSteamMenu();
         }
 
-        machineOrder += 1;
+        machineToPlace = machine;
 
+        buyButton.textContent = `Place ${machine.name} on a tile`;
+        buyButton.disabled = true;
         if (machineOrder < machines.length) {
             let nextMachine = machines[machineOrder];
 
@@ -550,6 +595,20 @@ function buy(machine) {
 
         loadResource();
     }
+}
+
+function updateBuyButton(){
+    if (machineOrder >= machines.length){
+        buyButton.textContent = "All machines purchased";
+        buyButton.disabled = true;
+        return;
+    }
+
+    const nextMachine = machines[machineOrder];
+
+    buyButton.textContent = `Buy ${nextMachine.name} for ${nextMachine.cost} ${nextMachine.costType}`;
+
+    buyButton.disabled = false;
 }
 
 function isBought(name) {

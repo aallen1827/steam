@@ -35,8 +35,6 @@ function showTileMenu(tileElement){
 
     const gap = 8;
 
-    
-
     tileMenu.classList.add("visible");
 
     const menuWidth = tileMenu.offsetWidth;
@@ -96,8 +94,8 @@ tileMenu.addEventListener("click", function(event){
         return;
     }
 
-    if(action === "build"){
-        buildOnSelectedTile();
+    if(action === "place"){
+        placeSelectedMachine();
     }
 
     if (action === "inspect"){
@@ -106,14 +104,6 @@ tileMenu.addEventListener("click", function(event){
 })
 
 //menu action button functions
-function buildOnSelectedTile(){
-    if(selectedTileId === null){
-        return;
-    }
-
-    console.log(`building on tile ${selectedTileId}`)
-}
-
 function inspectSelectedTile(){
     if(selectedTileId === null){
         return;
