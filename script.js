@@ -38,7 +38,7 @@ const resources = {
 const environment = {
     temperature: 0,
     pressure: 0,
-    oxygen: 0,
+    atmosphere: 0,
     biosphere: 0
 }
 
@@ -68,7 +68,7 @@ machines = [
         nextBuy: "Boiler",
         inputs: {},
         outputs: {
-            water: 2
+            water: 20
         },
         active: true,
         efficiency: 1,
@@ -85,7 +85,7 @@ machines = [
             water: 1
         },
         outputs: {
-            steam: 2
+            steam: 20
         },
         active: true,
         efficiency: 1,
@@ -102,7 +102,7 @@ machines = [
             steam: 1
         },
         outputs: {
-            ore: 2
+            ore: 20
         },
         active: true,
         efficiency: 1,
@@ -120,7 +120,7 @@ machines = [
             steam: 1
         },
         outputs: {
-            metal: 2
+            metal: 20
         },
         active: true,
         efficiency: 1,
@@ -137,7 +137,7 @@ machines = [
             steam: 2
         },
         outputs: {
-            oxygen: 2
+            oxygen: 20
         },
         active: true,
         efficiency: 1,
@@ -155,7 +155,7 @@ machines = [
             steam: 2
         },
         outputs: {
-            oxygen: 0.2
+            atmosphere: 20
         },
         outputTarget: "environment",
         active: true,
@@ -173,7 +173,7 @@ machines = [
             steam: 4
         },
         outputs: {
-            temperature: 0.3
+            temperature: 20
         },
         outputTarget: "environment",
         active: true,
@@ -192,7 +192,7 @@ machines = [
             water: 2
         },
         outputs: {
-            pressure: 0.5
+            pressure: 20
         },
         outputTarget: "environment",
         active: true,
@@ -211,7 +211,7 @@ machines = [
             oxygen: 3
         },
         outputs: {
-            biosphere: 0.2
+            biosphere: 20
         },
         outputTarget: "environment",
         active: true,
@@ -238,6 +238,9 @@ async function timePass() {
         });
         loadResource();
         stageUp();
+        loadTerraformProgress();
+        loadStage();
+        checkWin();
         await delay(1000);
     }
 }
@@ -263,6 +266,7 @@ function runMachine(machine) {
     const outputsFull = Object.keys(machine.outputs).every(resource => {
         return target[resource] >= outputMax;
     })
+    if (outputsFull) return;
 
     // Check all inputs
     for (let resource in machine.inputs) {
@@ -334,7 +338,7 @@ function buy(machine) {
 }
 
 function isBought(name) {
-    return builtMachines.some(machine =>
+    return machines.some(machine =>
         machine.name === name && machine.bought
     );
 }
@@ -368,14 +372,16 @@ function stageUp() {
         resources.steam >= 15
     ) {
         gameStage = 3;
+        max = 40;
     }
 
     // Stage 4: Reach 45% terraforming
     if (
         gameStage === 3 &&
-        progress >= 45
+        progress >= 25
     ) {
         gameStage = 4;
+        max = 60;
     }
 
     // Stage 5: Reach 100% terraforming
@@ -387,6 +393,23 @@ function stageUp() {
     }
 }
 
+function loadStage() {
+    const stageDisplay = document.querySelector("#stageDisplay");
+
+    const objectives = {
+        1: "Build an Ice Extractor, Boiler, and Mine",
+        2: "Collect 20 metal and 15 steam",
+        3: "Reach 25% terraforming",
+        4: "Reach 100% terraforming",
+        5: "Keep a stable environment for 1 minute"
+    };
+
+    stageDisplay.innerHTML = `
+        <h2>Stage ${gameStage}</h2>
+        <p>${objectives[gameStage]}</p>
+    `;
+}
+
 function getTerraformProgress() {
     let total = 0;
 
@@ -395,4 +418,41 @@ function getTerraformProgress() {
     }
 
     return total / Object.keys(environment).length;
+}
+
+function loadTerraformProgress() {
+    const display = document.querySelector("#terraformProgress");
+
+    display.innerHTML = `
+        <h2>Terraforming: ${getTerraformProgress().toFixed(1)}%</h2>
+        <p>Temperature: ${environment.temperature.toFixed(1)}%</p>
+        <p>Pressure: ${environment.pressure.toFixed(1)}%</p>
+        <p>Atmosphere: ${environment.atmosphere.toFixed(1)}%</p>
+        <p>Biosphere: ${environment.biosphere.toFixed(1)}%</p>
+    `;
+}
+
+let stabilityTime = 0;
+
+function checkWin() {
+    if (gameStage !== 5) return;
+
+    const stable = Object.values(environment).every(
+        value => value >= 100
+    );
+
+    if (stable) {
+        stabilityTime++;
+    } else {
+        stabilityTime = 0;
+    }
+
+    if (stabilityTime >= 5) {
+        winGame();
+    }
+}
+
+function winGame() {
+    play = false;
+    alert("Mars has been successfully terraformed!");
 }
