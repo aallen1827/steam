@@ -587,6 +587,35 @@ function placeSelectedMachine(){
     placeMachine(selectedTile);
 }
 
+function toggleMachineProduction() {
+    const selectedTile =
+        document.querySelector("#map .tile.selected");
+
+    if (!selectedTile) {
+        return;
+    }
+
+    const machine = builtMachines.find(machine =>
+        machine.location === selectedTile &&
+        machine.placed === true
+    );
+
+    if (!machine) {
+        console.log("There is no machine on this tile");
+        return;
+    }
+
+    machine.active = !machine.active;
+
+    console.log(
+        `${machine.name} production is now ${
+            machine.active ? "active" : "stopped"
+        }`
+    );
+
+    loadResource();
+}
+
 function removeSelectedMachine() {
     const selectedTile =
         document.querySelector("#map .tile.selected");
