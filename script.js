@@ -409,6 +409,11 @@ function runMachine(machine) {
 
 function loadResource() {
     resourceBar.innerHTML = `<h1>Water: ${resources.water}</h1> <h1>Ore: ${resources.ore}</h1> <h1>Metal: ${resources.metal}</h1> <h1>Oxygen: ${resources.oxygen}</h1>`;
+    steamDisplay.innerHTML = `<h2>Warehouse: ${getStorageUsed()} / ${storage.capacity}</h2>`;
+    
+    if (!shopMenu.hidden) {
+        loadShop();
+    }
     steamDisplay.innerHTML = `<h2>Warehouse Capacity: ${getStorageUsed()} / ${storage.capacity}</h2>`;
 }
 
@@ -1325,6 +1330,8 @@ const alertTitle = document.querySelector("#alertTitle");
 const alertMessage = document.querySelector("#alertMessage");
 const alertClose = document.querySelector("#alertClose");
 
+let showTutorialNext = false;
+
 function showAlert(title, message) {
     alertTitle.textContent = title;
     alertMessage.textContent = message;
@@ -1334,6 +1341,15 @@ function showAlert(title, message) {
 
 function closeAlert() {
     gameAlert.hidden = true;
+
+    if (showTutorialNext) {
+        showTutorialNext = false;
+
+        showAlert(
+            "How to Play",
+            "Use the Shop to purchase new machines. Select an empty tile to place a purchased machine. Machines produce resources over time, but often require steam from a Boiler to function. Use Resources to adjust your storage and discard unnessisary resources. To edit your machines click on it and use the buttons that will appear. Enjoy this new world and make sure to mind your steam usage!"
+        );
+    }
 }
 
 alertClose.addEventListener("click", closeAlert);
@@ -1342,6 +1358,12 @@ alertClose.addEventListener("click", closeAlert);
 
 //GAME START ---------------------------------------------------
 function startGame() {
+    showTutorialNext = true;
+
+    showAlert(
+        "Welcome to Mars!",
+        "Your mission is to transform Mars into a habitable planet. Good luck!"
+    );
     showAlert("THE RED FRONTIER", "The year is 1899. Humanity has conquered the skies, and now its greatest steam-powered expedition has landed upon the frozen deserts of Mars. Beneath the rust-red sands lie precious metals, while the polar ice caps hold the water needed to power a new civilization. Armed with copper pipes, iron machinery, and the might of steam, you have been entrusted with an impossible mission: transform this lifeless world into a habitable planet. Build your colony, manage your resources, and harness the power of steam to reshape the Martian environment. The future of Mars rests in your hands.");
 }
 
