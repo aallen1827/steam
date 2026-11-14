@@ -220,7 +220,7 @@ machines = [
             oxygen: 3,
         },
         outputs: {
-            atmosphere: 20
+            atmosphere: 1
         },
         outputTarget: "environment",
         active: true,
@@ -238,7 +238,7 @@ machines = [
         nextBuy: "Pressure Generator",
         inputs: {},
         outputs: {
-            temperature: 20
+            temperature: 1
         },
         outputTarget: "environment",
         active: true,
@@ -258,7 +258,7 @@ machines = [
             water: 2
         },
         outputs: {
-            pressure: 20
+            pressure: 1
         },
         outputTarget: "environment",
         active: true,
@@ -279,7 +279,7 @@ machines = [
             oxygen: 3
         },
         outputs: {
-            biosphere: 20
+            biosphere: 1
         },
         outputTarget: "environment",
         active: true,
@@ -409,7 +409,7 @@ function runMachine(machine) {
 
 function loadResource() {
     resourceBar.innerHTML = `<h1>Water: ${resources.water}</h1> <h1>Ore: ${resources.ore}</h1> <h1>Metal: ${resources.metal}</h1> <h1>Oxygen: ${resources.oxygen}</h1>`;
-    steamDisplay.innerHTML = `<h2>Warehouse: ${getStorageUsed()} / ${storage.capacity}</h2>`;
+    steamDisplay.innerHTML = `<h2>Warehouse Capacity: ${getStorageUsed()} / ${storage.capacity}</h2>`;
 }
 
 function loadUnplacedMachineMenu(){
@@ -949,7 +949,7 @@ function loadStorageInfo() {
     const storageInfo = document.querySelector("#storageInfo");
 
     storageInfo.textContent =
-        `Storage: ${getStorageUsed().toFixed(1)} / ${storage.capacity}`;
+        `Storage: ${getStorageUsed().toFixed(0)} / ${storage.capacity}`;
 }
 
 discOre.addEventListener("click", () => {
@@ -1050,12 +1050,18 @@ function isUnlocked(machine) {
 
 //Stages ----------------------------------------------------------------
 const objectives = {
-    1: "Build an Ice Extractor, Boiler, and Mine",
-    2: "Build another Boiler, Warehouse, and collect 20 metal",
-    3: "Reach 25% terraforming",
-    4: "Reach 100% terraforming",
-    5: "Keep a stable environment for 15 secondes"
+    1: "Build an Ice Extractor, a Boiler, and a Mine",
+    2: "Build another Boiler, a Warehouse, and collect 20 metal",
+    3: "Reach 35% terraforming",
+    4: "Reach 100% terraforming"
 };
+
+const stories = {
+    1: "Your expedition has landed beside the Martian ice caps. The planet is frozen, the atmosphere is unbreathable, and your supplies are limited. Before terraforming can begin, you must establish the foundations of your steam-powered colony. Extract water from the ice, construct a Boiler to generate steam power, and establish a Mine to gather the raw materials needed for expansion. Objective: Build an Ice Extractor, Boiler, and Mine.",
+    2: "Your first machines roar to life! Water flows from the ice caps, steam powers your machinery, and the Martian soil begins to yield its riches. But your growing colony demands more power and greater storage. To prepare for planetary transformation, you must expand your industrial capabilities. Construct another Boiler to increase steam capacity, establish a Warehouse to store valuable resources, and stockpile the metal needed for advanced machinery. Objective: Build another Boiler, a Warehouse, and collect 20 Metal.",
+    3: "Your industrial colony is thriving, but Mars remains a hostile world. The thin atmosphere offers little protection, and the freezing temperatures make life beyond your machines impossible. Now begins the true work of terraforming. Construct powerful atmospheric processors and heating towers to warm the planet and transform its atmosphere. Carefully distribute your steam power to keep your growing network operating. For the first time in history, the environment of Mars will begin to change. Objective: Reach 35% overall terraforming progress.",
+    4: "The transformation has begun! Temperatures are rising, the atmosphere is changing, and the once-lifeless planet is showing the first signs of becoming a new home for humanity. Yet the work is far from complete. Expand your terraforming operations to increase atmospheric pressure and establish a thriving biosphere. Every machine, every pipe, and every measure of steam now brings Mars closer to life. The final chapter of humanity's greatest engineering achievement is upon you. Objective: Reach 100% terraforming progress across temperature, pressure, atmosphere, and biosphere."
+}
 
 function stageUp() {
     const previousStage = gameStage;
@@ -1084,17 +1090,9 @@ function stageUp() {
     // Stage 4
     if (
         gameStage === 3 &&
-        progress >= 25
+        progress >= 35
     ) {
         gameStage = 4;
-    }
-
-    // Stage 5
-    if (
-        gameStage === 4 &&
-        progress >= 100
-    ) {
-        gameStage = 5;
     }
 
     // Only execute when the stage changes
@@ -1104,7 +1102,7 @@ function stageUp() {
 
         showAlert(
             `Stage ${gameStage} Unlocked!`,
-            objectives[gameStage]
+            stories[gameStage]
         );
     }
 }
@@ -1132,30 +1130,40 @@ function loadTerraformProgress() {
     const display = document.querySelector("#terraformProgress");
 
     display.innerHTML = `
-        <h2>Terraforming: ${getTerraformProgress().toFixed(1)}%</h2>
-        <p>Temperature: ${environment.temperature.toFixed(1)}%</p>
-        <p>Pressure: ${environment.pressure.toFixed(1)}%</p>
-        <p>Atmosphere: ${environment.atmosphere.toFixed(1)}%</p>
-        <p>Biosphere: ${environment.biosphere.toFixed(1)}%</p>
+        <h2>Terraforming Progress</h2>
+        ${createProgressBar("Overall Progress", getTerraformProgress())}
+        ${createProgressBar("Temperature", environment.temperature)}
+        ${createProgressBar("Pressure", environment.pressure)}
+        ${createProgressBar("Atmosphere", environment.atmosphere)}
+        ${createProgressBar("Biosphere", environment.biosphere)}
     `;
 }
 
-let stabilityTime = 0;
+function createProgressBar(name, value) {
+    const percentage = Math.max(0, Math.min(100, value));
+
+    return `
+        <div class="terraform-stat">
+            <div class="terraform-label">
+                <span>${name}</span>
+                <span>${percentage.toFixed(1)}%</span>
+            </div>
+
+            <div class="progress-track">
+                <div class="progress-fill"
+                     style="width: ${percentage}%">
+                </div>
+            </div>
+        </div>
+    `;
+}
 
 function checkWin() {
-    if (gameStage !== 5) return;
-
-    const stable = Object.values(environment).every(
-        value => value >= 100
-    );
-
-    if (stable) {
-        stabilityTime++;
-    } else {
-        stabilityTime = 0;
+    if (gameStage !== 4) {
+        return;
     }
 
-    if (stabilityTime >= 15) {
+    if (getTerraformProgress() >= 100) {
         winGame();
     }
 }
@@ -1163,8 +1171,8 @@ function checkWin() {
 function winGame() {
     play = false;
     showAlert(
-        "Victory!",
-        "Mars has been successfully terraformed!"
+        "VICTORY! - A SECOND EARTH",
+        "Against impossible odds, you have done it. Where once there was only frozen desert, a new world now stands. The atmosphere is restored, the planet is warm, and life can finally take root beneath the Martian sky. Through ingenuity, industry, and the unstoppable power of steam, humanity has claimed a second home among the stars. Mars is no longer a distant dream. It is our future."
     );
 }
 
@@ -1334,7 +1342,7 @@ alertClose.addEventListener("click", closeAlert);
 
 //GAME START ---------------------------------------------------
 function startGame() {
-    showAlert("Welcome to Mars!", "Your mission is to transform Mars into a habitable planet. Good luck!");
+    showAlert("THE RED FRONTIER", "The year is 1899. Humanity has conquered the skies, and now its greatest steam-powered expedition has landed upon the frozen deserts of Mars. Beneath the rust-red sands lie precious metals, while the polar ice caps hold the water needed to power a new civilization. Armed with copper pipes, iron machinery, and the might of steam, you have been entrusted with an impossible mission: transform this lifeless world into a habitable planet. Build your colony, manage your resources, and harness the power of steam to reshape the Martian environment. The future of Mars rests in your hands.");
 }
 
 //game runs
