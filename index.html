@@ -15,8 +15,30 @@
     <main>
         <div id="stageDisplay"></div>
         <div id="resourceBar"></div>
+        <div id="steam"></div>
+
+        <button id="resourceButton">Manage Resources</button>
+        <div id="resourceMenu" style="display: none;">
+            <h2>Resource Allocation</h2>
+            <p>Drop:</p>
+            <button id="water">Water</button>
+            <button id="ore">Ore</button>
+            <button id="metal">Metal</button>
+            <button id="oxygen">Oxygen</button>
+            <button id="closeResource">Close</button>
+        </div>
+        
+        <button id="steamButton">Manage Steam</button>
+
+        <div id="steamMenu" style="display: none;">
+            <h2>Steam Allocation</h2>
+            <p id="steamDisplay"></p>
+            <div id="steamControls"></div>
+            <button id="closeSteam">Close</button>
+        </div>
+        
         <div id="buttons">
-            <button id="buy">Buy Boiler for 10 Water</button>
+            <button id="buy">Buy Ice Harvester for 10 Water</button>
         </div>
         <div id="terraformProgress"></div>
         <div id="map">
