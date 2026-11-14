@@ -23,6 +23,9 @@ const resourceBar = document.querySelector("#resourceBar");
 const buyButton = document.querySelector("#buy");
 const steamDisplay = document.querySelector("#steam");
 
+const shopMenu = document.querySelector("#shopMenu");
+const shopItems = document.querySelector("#shopItems");
+const closeShopButton = document.querySelector("#closeShop");
 
 
 
@@ -62,10 +65,28 @@ var machineToPlace = null;
 a1.addEventListener("click", () => {
     resources.water -= 5;
     loadResource();
-})
+});
 buyButton.addEventListener("click", () => {
-    buy(machines[machineOrder]);
-})
+    openShop();
+});
+closeShopButton.addEventListener("click", () => {
+    closeShop();
+});
+
+shopItems.addEventListener("click", function(event){
+    const selectedShopItem = event.target.closest(".shop-item");
+
+    if (!selectedShopItem){
+        return;
+    }
+    
+    const machineIndex = Number(selectedShopItem.dataset.machineIndex);
+
+    const selectedMachine = machines[machineIndex];
+
+    buy(selectedMachine);
+    closeShop();
+});
 
 //MACHINES -------------------------------------------------------------------
 //machine array
@@ -253,9 +274,6 @@ machines = [
 ]
 
 const builtMachines = []
-var machineOrder = 0;
-
-updateBuyButton();
 
 var play = true;
 
@@ -391,9 +409,6 @@ function placeMachine(tile) {
 
     machineToPlace = null;
 
-    machineOrder +=1;
-
-    updateBuyButton();
     loadResource();
 
     console.log(`${machine.name} placed on ${tile.id}`);
@@ -411,7 +426,93 @@ function placeSelectedMachine(){
     placeMachine(selectedTile);
 }
 
+function removeSelectedMachine(){
+    const selectedTile = document.querySelector("#map .tile.selected");
 
+    if (!selectedTile){
+        console.log("Select a tile before removing a machine");
+        return;
+    }
+
+    const machine = machines.find(machine =>
+        machine.location === selectedTile &&
+        machine.placed ===true
+    );
+
+    if (!machine){
+        console.log("There is no machine on this tile");
+        return;
+    }
+    
+    selectedTile.innerHTML = "";
+
+    delete selectedTile.dataset.occupied;
+
+    machine.location = null;
+    machine.placed = false;
+
+    const machineIndex = builtMachines.indexOf(machine);
+
+    if (machineIndex !== -1){
+        builtMachines.splice(machineIndex, 1);
+    }
+
+    console.log(`${machine.name} removed from ${selectedTile.id}`);
+}
+
+function openShop(){
+    loadShop();
+    shopMenu.hidden = false;
+}
+
+function closeShop(){
+    shopMenu.hidden = true;
+}
+
+function loadShop(){
+    shopItems.innerHTML = "";
+
+    machines.forEach((machine, index) => {
+        const hasEnoughResources = 
+            resources[machine.costType] >= machine.cost;
+
+        const stageRequirementMet = 
+            isUnlocked(machine);
+
+        const machineAvailable = 
+            !machine.bought &&
+            !machineToPlace &&
+            hasEnoughResources &&
+            stageRequirementMet;
+
+        const machineEntry = document.createElement("button");
+
+        machineEntry.classList.add("shop-item");
+        machineEntry.dataset.machineIndex = index;
+        machineEntry.disabled = !machineAvailable;
+
+        machineEntry.innerHTML = `
+            <div class="shop-details">
+                <h3>${formatMachineName(machine.name)}</h3>
+                <p>Cost: ${machine.cost} ${machine.costType}</p>
+                <p>Stage required: ${machine.stageRequired}</p>
+            </div>
+
+            <div class="shop-image">
+                <img
+                    src="images/${machine.name}.png"
+                    alt="${formatMachineName(machine.name)}"
+                    >
+            </div>
+        `;
+
+        shopItems.appendChild(machineEntry);
+    });
+}
+
+function formatMachineName(machineName){
+    return machineName.replace(/([a-z])([A-Z])/g, "$1 $2");
+}
 //PIPES ---------------------------------------------------------------------
 function getEfficiency(machine) {
     if (machine.steamRequired === 0) {
@@ -562,27 +663,18 @@ function buy(machine) {
         return;
     }
 
+    if (!isUnlocked(machine)){
+        return
+    }
+
     if (resources[machine.costType] >= machine.cost) {
         resources[machine.costType] -= machine.cost;
 
         machine.bought = true;
         machine.placed = false;
-        if (steamMenu.style.display === "block") {
-            loadSteamMenu();
-        }
 
         machineToPlace = machine;
 
-        buyButton.textContent = `Place ${machine.name} on a tile`;
-        buyButton.disabled = true;
-        if (machineOrder < machines.length) {
-            let nextMachine = machines[machineOrder];
-
-            buyButton.textContent = `Buy ${nextMachine.name} for ${nextMachine.cost} ${nextMachine.costType}`;
-        } else {
-            buyButton.textContent = "All machines purchased";
-            buyButton.disabled = true;
-        }
         if (machine.name == "Boiler") {
             steam.capacity += 10;
         }
@@ -595,20 +687,6 @@ function buy(machine) {
 
         loadResource();
     }
-}
-
-function updateBuyButton(){
-    if (machineOrder >= machines.length){
-        buyButton.textContent = "All machines purchased";
-        buyButton.disabled = true;
-        return;
-    }
-
-    const nextMachine = machines[machineOrder];
-
-    buyButton.textContent = `Buy ${nextMachine.name} for ${nextMachine.cost} ${nextMachine.costType}`;
-
-    buyButton.disabled = false;
 }
 
 function isBought(name) {
