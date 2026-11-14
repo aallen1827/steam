@@ -290,6 +290,10 @@ async function timePass() {
         loadTerraformProgress();
         loadStage();
         checkWin();
+
+        if (!resourceInfo.hidden) {
+            loadStorageInfo();
+        }
         await delay(1000);
     }
 }
@@ -695,11 +699,11 @@ function loadSteamMenu() {
 
 steamButton.addEventListener("click", () => {
     loadSteamMenu();
-    steamMenu.style.display = "block";
+    steamMenu.hidden = false;
 });
 
 closeSteam.addEventListener("click", () => {
-    steamMenu.style.display = "none";
+    steamMenu.hidden = true;
 });
 
 
@@ -724,6 +728,7 @@ function discardResource(resource, amount) {
         resources[resource] - amount
     );
     loadResource();
+    loadStorageInfo();
 }
 
 const discWater = document.querySelector("#water");
@@ -734,12 +739,20 @@ const resourceButton = document.querySelector("#resourceButton");
 const resourceInfo = document.querySelector("#resourceMenu");
 const closeResource = document.querySelector("#closeResource")
 resourceButton.addEventListener("click", () => {
-    resourceInfo.style.display = "block";
-})
+    loadStorageInfo();
+    resourceInfo.hidden = false;
+});
 
 closeResource.addEventListener("click", () => {
-    resourceInfo.style.display = "none";
-})
+    resourceInfo.hidden = true;
+});
+
+function loadStorageInfo() {
+    const storageInfo = document.querySelector("#storageInfo");
+
+    storageInfo.textContent =
+        `Storage: ${getStorageUsed().toFixed(1)} / ${storage.capacity}`;
+}
 
 discOre.addEventListener("click", () => {
     discardResource("ore", 10);

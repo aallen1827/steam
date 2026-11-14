@@ -7,14 +7,94 @@
     --background: #3B2925;
 }
 
+/* GENERAL ---------------------------------------------- */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background-color: var(--background);
+    color: white;
+}
+
 main {
     position: relative;
     overflow: visible;
 }
 
-body {
-    background-color: var(--background);
-    color: white;
+button {
+    font-family: inherit;
+}
+
+button:focus-visible,
+.tile:focus-visible {
+    outline: 2px solid var(--ice);
+    outline-offset: 3px;
+}
+
+/* MAIN GAME LAYOUT ------------------------------------- */
+
+#gameLayout {
+    display: grid;
+    grid-template-columns: minmax(0, 2.3fr) minmax(260px, 1fr);
+    gap: 25px;
+
+    width: 95%;
+    max-width: 1600px;
+    margin: 20px auto;
+
+    align-items: stretch;
+}
+
+/* LEFT COLUMN ------------------------------------------ */
+
+#gameArea {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 0;
+}
+
+#resourcePanel {
+    background-color: var(--copper);
+    color: var(--iron);
+
+    border: 2px solid var(--rust);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+#resourceBar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    color: var(--iron);
+}
+
+#resourceBar h1 {
+    color: var(--iron);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+#steam {
+    color: var(--iron);
+    text-align: center;
+    margin-top: 10px;
+}
+
+#steam h2 {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+#steam p {
+    margin: 5px 0;
 }
 
 /* MAP -------------------------------------------------- */
@@ -22,13 +102,15 @@ body {
 #map {
     display: grid;
     position: relative;
+
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    grid-template-rows: repeat(4, 1fr);
+    grid-template-rows: repeat(4, minmax(0, 1fr));
 
     --pipe-gap: 20px;
     gap: var(--pipe-gap);
 
-    max-width: 60%;
+    width: 100%;
+    max-width: none;
 
     background-image: url("images/stage_1.png");
     background-size: cover;
@@ -42,12 +124,12 @@ body {
 
 .tile {
     position: relative;
+
     width: 100%;
     min-width: 0;
     min-height: 0;
     aspect-ratio: 1 / 1;
-    background-color: rgba(0, 0, 0, 0.15);
-    aspect-ratio: 1 / 1;
+
     overflow: visible;
 
     background-color: rgba(41, 45, 50, 0.15);
@@ -81,12 +163,76 @@ body {
     display: block;
 }
 
-/* RESOURCE BAR ----------------------------------------- */
+/* RIGHT SIDEBAR ---------------------------------------- */
 
-#resourceBar {
+#gameSidebar {
     display: flex;
-    gap: 15px;
-    color: var(--ice);
+    flex-direction: column;
+    gap: 12px;
+
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+
+    justify-content: space-between;
+}
+
+.info-panel,
+.sidebar-button {
+    background-color: var(--copper);
+    color: var(--iron);
+
+    border: 2px solid var(--rust);
+    border-radius: 10px;
+
+    padding: 18px;
+}
+
+.info-panel {
+    flex: 1;
+    min-height: 0;
+}
+
+.info-panel h2 {
+    color: var(--rust);
+    font-size: 20px;
+    margin: 0 0 10px;
+}
+
+.info-panel p {
+    color: var(--iron);
+    margin: 5px 0;
+    line-height: 1.5;
+}
+
+/* SIDEBAR BUTTONS -------------------------------------- */
+
+.sidebar-button {
+    width: 100%;
+
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s,
+        transform 0.2s;
+}
+
+.sidebar-button:hover {
+    background-color: var(--ice);
+    transform: scale(1.02);
+}
+
+#buttons {
+    width: 100%;
+    display: flex;
+}
+
+#buttons #buy {
+    width: 100%;
 }
 
 /* TILE POPUP MENU -------------------------------------- */
@@ -117,8 +263,10 @@ body {
 .tile-menu-popup button {
     background-color: var(--copper);
     color: var(--iron);
+
     border: none;
     border-radius: 5px;
+
     padding: 8px;
     cursor: pointer;
 }
@@ -130,10 +278,10 @@ body {
 /* SHOP MENU -------------------------------------------- */
 
 .shop-menu {
-    position: absolute;
-    top: 100px;
+    position: fixed;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
 
     width: 600px;
     max-width: 90vw;
@@ -165,6 +313,26 @@ body {
     margin-bottom: 12px;
 }
 
+.shop-header button {
+    background-color: var(--copper);
+    color: var(--iron);
+
+    border: 2px solid var(--copper);
+    border-radius: 6px;
+
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.shop-header button:hover {
+    background-color: var(--ice);
+    border-color: var(--ice);
+    transform: scale(1.05);
+}
+
 .shop-items {
     display: flex;
     flex-direction: column;
@@ -173,7 +341,7 @@ body {
 
 .shop-item {
     display: grid;
-    grid-template-columns: 1fr 120px;
+    grid-template-columns: minmax(0, 1fr) 120px;
     align-items: center;
 
     width: 100%;
@@ -188,7 +356,10 @@ body {
     border-radius: 6px;
 
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+
+    transition:
+        background-color 0.2s,
+        border-color 0.2s;
 }
 
 .shop-item:hover:not(:disabled) {
@@ -220,12 +391,89 @@ body {
     max-height: 100px;
 }
 
+/* RESOURCE MANAGEMENT MENU ----------------------------- */
+
+.resource-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.resource-options button {
+    background-color: var(--iron);
+    color: white;
+
+    border: 2px solid var(--copper);
+    border-radius: 6px;
+
+    padding: 15px;
+    font-size: 16px;
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.resource-options button:hover {
+    background-color: var(--copper);
+    color: var(--iron);
+}
+
+#resourceMenu h3 {
+    color: var(--ice);
+    margin-top: 20px;
+}
+
+#storageInfo {
+    color: white;
+}
+
+/* STEAM MANAGEMENT MENU -------------------------------- */
+
+#steamControls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+#steamControls > div {
+    background-color: var(--iron);
+    border: 2px solid var(--copper);
+    border-radius: 6px;
+
+    padding: 15px;
+}
+
+#steamControls h3 {
+    color: var(--ice);
+    margin: 0 0 10px;
+}
+
+#steamControls input[type="range"] {
+    width: 100%;
+    accent-color: var(--ice);
+}
+
+#steamControls span {
+    display: block;
+    color: white;
+    margin-top: 8px;
+}
+
+#steamDisplay {
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
 /* PIPES ------------------------------------------------ */
 
 .pipe {
     position: absolute;
     width: 36px;
     height: 48px;
+
     z-index: 3;
     pointer-events: none;
     object-fit: contain;
@@ -263,7 +511,9 @@ body {
     bottom: -16px;
 }
 
-#unplaced-machine-menu h3{
+/* UNPLACED MACHINE MENU -------------------------------- */
+
+#unplaced-machine-menu h3 {
     color: white;
     margin-top: 0;
 }
@@ -274,7 +524,7 @@ body {
     gap: 8px;
 }
 
-.unplaced-machine{
+.unplaced-machine {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -283,20 +533,22 @@ body {
     padding: 8px;
 
     color: white;
-    background-color: #49351e;
-    border: 1px solid #c58b3a;
+    background-color: var(--iron);
+
+    border: 1px solid var(--copper);
+    border-radius: 5px;
+
     cursor: pointer;
 }
 
-.unplaced-machine:hover{
-    background-color: #76552b;
+.unplaced-machine:hover {
+    background-color: var(--rust);
 }
 
-.unplaced-machine img{
+.unplaced-machine img {
     width: 45px;
     height: 45px;
     object-fit: contain;
-    bottom: calc(-1 * var(--pipe-gap) / 2 - 24px);
 }
 
 /* GAME ALERT ------------------------------------------- */
@@ -311,7 +563,7 @@ body {
     justify-content: center;
     align-items: center;
 
-    z-index: 1000;
+    z-index: 10001;
 }
 
 .game-alert[hidden] {
@@ -365,17 +617,12 @@ body {
 #alertClose:hover {
     background-color: var(--ice);
     border-color: var(--ice);
+
     box-shadow: 0 0 12px rgba(169, 217, 232, 0.4);
     transform: scale(1.05);
 }
 
 /* STEAM CONTROLS --------------------------------------- */
-
-#steamMenu {
-    background-color: var(--rust);
-    color: white;
-    border: 2px solid var(--copper);
-}
 
 #steamMenu h2,
 #steamMenu h3 {
@@ -386,33 +633,38 @@ body {
     accent-color: var(--ice);
 }
 
-/* GENERAL BUTTONS -------------------------------------- */
+/* RESPONSIVE LAYOUT ------------------------------------ */
 
-button {
-    font-family: inherit;
+@media (max-width: 900px) {
+    #gameLayout {
+        grid-template-columns: 1fr;
+    }
+
+    #gameSidebar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        height: auto;
+    }
+
+    #gameSidebar > * {
+        min-width: 0;
+    }
 }
 
-button:focus-visible,
-.tile:focus-visible {
-    outline: 2px solid var(--ice);
-    outline-offset: 3px;
-}
+@media (max-width: 550px) {
+    #gameSidebar {
+        grid-template-columns: 1fr;
+    }
 
-.shop-header button {
-    background-color: var(--copper);
-    color: var(--iron);
-    border: 2px solid var(--copper);
-    border-radius: 6px;
+    #map {
+        --pipe-gap: 10px;
+    }
 
-    padding: 10px 20px;
-    font-weight: bold;
-    cursor: pointer;
+    #resourceBar h1 {
+        font-size: 14px;
+    }
 
-    transition: 0.2s;
-}
-
-.shop-header button:hover {
-    background-color: var(--ice);
-    border-color: var(--ice);
-    transform: scale(1.05);
+    .sidebar-button {
+        font-size: 16px;
+    }
 }
