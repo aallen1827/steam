@@ -437,7 +437,7 @@ function placeUnplacedMachine(machineId){
 
     const machine = unplacedMachines[machineIndex];
 
-    selectedTile.innerHTML = `<img src="images/${machine.name}.png" alt="${formatMachineName(machine.name)}">`;
+    selectedTile.innerHTML = `class="machine-img" <img src="images/${machine.name}.png" alt="${formatMachineName(machine.name)}">`;
 
     selectedTile.dataset.occupied = "true";
 
