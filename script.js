@@ -31,7 +31,8 @@ const resources = {
     water: 10,
     metal: 10,
     steam: 0,
-    oxygen: 0
+    oxygen: 0,
+    ore: 0
 }
 
 const environment = {
@@ -40,6 +41,8 @@ const environment = {
     oxygen: 0,
     biosphere: 0
 }
+
+var gameStage = 1;
 
 var max = 20;
 
@@ -69,7 +72,7 @@ machines = [
         },
         active: true,
         efficiency: 1,
-        unlocked: true
+        stageRequired: 1
     },
     {
         name: "Boiler",
@@ -86,7 +89,7 @@ machines = [
         },
         active: true,
         efficiency: 1,
-        unlocked: true
+        stageRequired: 1
     },
     {
         name: "Mine",
@@ -103,7 +106,7 @@ machines = [
         },
         active: true,
         efficiency: 1,
-        unlocked: true
+        stageRequired: 1
     },
     {
         name: "Smelter",
@@ -121,7 +124,7 @@ machines = [
         },
         active: true,
         efficiency: 1,
-        unlocked: false
+        stageRequired: 2
     },
     {
         name: "Greenhouse",
@@ -138,7 +141,7 @@ machines = [
         },
         active: true,
         efficiency: 1,
-        unlocked: false
+        stageRequired: 2
     },
     {
         name: "Atmospheric Processor",
@@ -157,7 +160,7 @@ machines = [
         outputTarget: "environment",
         active: true,
         efficiency: 1,
-        unlocked: false
+        stageRequired: 3
     },
     {
         name: "Heating Tower",
@@ -175,7 +178,7 @@ machines = [
         outputTarget: "environment",
         active: true,
         efficiency: 1,
-        unlocked: false
+        stageRequired: 3
     },
     {
         name: "Pressure Generator",
@@ -194,7 +197,7 @@ machines = [
         outputTarget: "environment",
         active: true,
         efficiency: 1,
-        unlocked: false
+        stageRequired: 4
     },
     {
         name: "Biospheric Dome",
@@ -213,10 +216,12 @@ machines = [
         outputTarget: "environment",
         active: true,
         efficiency: 1,
-        unlocked: false
+        stageRequired: 4
     }
     
 ]
+
+const builtMachines = []
 var machineOrder = 0;
 
 var play = true;
@@ -232,6 +237,7 @@ async function timePass() {
             runMachine(machine);
         });
         loadResource();
+        stageUp();
         await delay(1000);
     }
 }
@@ -247,32 +253,44 @@ function runMachine(machine) {
         return;
     }
 
-    // Check if output is full
-    if (resources[machine.outputType] >= max) {
-        return;
-    }
+    const target = machine.outputTarget === "environment"
+        ? environment
+        : resources;
 
-    // Check if all input resources are available
+    // Check if all outputs are full
+    const outputMax = machine.outputTarget === "environment" ? 100 : max;
+
+    const outputsFull = Object.keys(machine.outputs).every(resource => {
+        return target[resource] >= outputMax;
+    })
+
+    // Check all inputs
     for (let resource in machine.inputs) {
         if (resources[resource] < machine.inputs[resource]) {
             return;
         }
     }
 
-    // Consume all required resources
+    // Consume inputs
     for (let resource in machine.inputs) {
         resources[resource] -= machine.inputs[resource];
     }
 
-    // Produce output
-    resources[machine.outputType] = Math.min(
-        resources[machine.outputType] + machine.outputAmount,
-        max
-    );
+    // Produce outputs
+    for (let resource in machine.outputs) {
+        const maxAmount = machine.outputTarget === "environment"
+            ? 100
+            : max;
+
+        target[resource] = Math.min(
+            target[resource] + machine.outputs[resource],
+            maxAmount
+        )
+    }
 }
 
 function loadResource() {
-    resourceBar.innerHTML = `<h1>Water: ${resources.water}</h1> <h1>Steam: ${resources.steam}</h1> <h1>Metal: ${resources.metal}</h1> <h1>Oxygen: ${resources.oxygen}</h1>`;
+    resourceBar.innerHTML = `<h1>Water: ${resources.water}</h1> <h1>Steam: ${resources.steam}</h1> <h1>Ore: ${resources.ore}</h1> <h1>Metal: ${resources.metal}</h1> <h1>Oxygen: ${resources.oxygen}</h1>`;
 }
 
 timePass();
@@ -282,18 +300,6 @@ function placeMachine(tile) {
     //change tile img src to match machine
 
 }
-
-//ice harvester
-
-
-
-//greenhouse machine
-
-
-//mine
-
-
-//boiler
 
 
 //PIPES ---------------------------------------------------------------------
@@ -328,24 +334,65 @@ function buy(machine) {
 }
 
 function isBought(name) {
-    return machines.find(machine => machine.name === name)?.bought === true;
+    return builtMachines.some(machine =>
+        machine.name === name && machine.bought
+    );
+}
+
+function isUnlocked(machine) {
+    return gameStage >= machine.stageRequired;
 }
 
 
-//Building
-
-//Upgrading
 
 
+//Stages ----------------------------------------------------------------
 
-//ENVIRONMENT ----------------------------------------------------------------
+function stageUp() {
+    const progress = getTerraformProgress();
 
-//Start
+    // Stage 2: Build the first three machines
+    if (
+        gameStage === 1 &&
+        isBought("IceExtractor") &&
+        isBought("Boiler") &&
+        isBought("Mine")
+    ) {
+        gameStage = 2;
+    }
 
-//lvl 2
+    // Stage 3: Reach resource requirements
+    if (
+        gameStage === 2 &&
+        resources.metal >= 20 &&
+        resources.steam >= 15
+    ) {
+        gameStage = 3;
+    }
 
-//lvl 3
+    // Stage 4: Reach 45% terraforming
+    if (
+        gameStage === 3 &&
+        progress >= 45
+    ) {
+        gameStage = 4;
+    }
 
-//lvl 4
+    // Stage 5: Reach 100% terraforming
+    if (
+        gameStage === 4 &&
+        progress >= 100
+    ) {
+        gameStage = 5;
+    }
+}
 
+function getTerraformProgress() {
+    let total = 0;
 
+    for (let attribute in environment) {
+        total += environment[attribute];
+    }
+
+    return total / Object.keys(environment).length;
+}
