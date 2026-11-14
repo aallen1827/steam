@@ -376,12 +376,17 @@ function placeMachine(tile) {
 
     const machine = machineToPlace;
 
-    tile.innerHTML = `<img src="images/${machine.name}.png" alt="${machine.name}">`;
+    tile.innerHTML = `
+        <img class="machine-img"
+         src="images/${machine.name}.png"
+         alt="${machine.name}">
+    `;
     
     tile.dataset.occupied = "true";
 
     machine.location = tile;
     machine.placed = true;
+    checkNeighbors(tile);
 
     builtMachines.push(machine);
 
@@ -744,4 +749,49 @@ function checkWin() {
 function winGame() {
     play = false;
     alert("Mars has been successfully terraformed!");
+}
+
+
+//DISPLAY PIPES ----------------------------------------------------------
+function checkNeighbors(tile) {
+    const tiles = [...document.querySelectorAll("#map .tile")];
+
+    const index = tiles.indexOf(tile);
+    const columns = 5;
+
+    const neighbors = {
+        top: index - columns,
+        bottom: index + columns,
+        left: index % columns !== 0 ? index - 1 : -1,
+        right: index % columns !== columns - 1 ? index + 1 : -1
+    };
+
+    for (let direction in neighbors) {
+        const neighborIndex = neighbors[direction];
+
+        if (neighborIndex < 0 || neighborIndex >= tiles.length) {
+            continue;
+        }
+
+        const neighbor = tiles[neighborIndex];
+
+        // Check whether neighboring tile contains a machine image
+        if (neighbor.dataset.occupied === "true") {
+            createPipe(tile, direction);
+        }
+    }
+}
+
+function createPipe(tile, direction) {
+    // Prevent duplicate pipes
+    if (tile.querySelector(`.pipe-${direction}`)) {
+        return;
+    }
+
+    const pipe = document.createElement("img");
+
+    pipe.src = "images/pipe2.png";
+    pipe.className = `pipe pipe-${direction}`;
+
+    tile.appendChild(pipe);
 }
