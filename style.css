@@ -1,0 +1,27 @@
+#map {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
+    gap: 20px;
+    max-width: 60%;
+}
+
+.tile {
+    width: 100%;
+    aspect-ratio: 1/1;
+    color: black;
+    background-color: black;
+}
+
+.tile p {
+    text-align: center;
+    color: white;
+}
+
+#resourceBar {
+    display: flex;
+}
+
+.tile img {
+    max-width: 100%;
+}
