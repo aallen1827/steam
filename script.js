@@ -63,10 +63,6 @@ var max = 20;
 var machineToPlace = null;
 
 //-------------------------------- Test Event Listeners ----------------------------
-a1.addEventListener("click", () => {
-    resources.water -= 5;
-    loadResource();
-});
 buyButton.addEventListener("click", () => {
     openShop();
 });
@@ -389,8 +385,6 @@ function loadResource() {
         <p>Available: ${getStorageAvailable().toFixed(1)}</p>`;
 }
 
-timePass();
-
 //place machine
 function placeMachine(tile) {
     //change tile img src to match machine
@@ -684,45 +678,46 @@ discWater.addEventListener("click", () => {
 
 
 //SPENDING ------------------------------------------------------------------
+function canAfford(machine) {
+    return (
+        machine &&
+        Number.isFinite(resources[machine.costType]) &&
+        Number.isFinite(machine.cost) &&
+        resources[machine.costType] >= machine.cost
+    );
+}
+
 function buy(machine) {
     if (!machine || machine.bought || machineToPlace) {
         return;
     }
 
-    if (!isUnlocked(machine)){
-        return
+    if (!isUnlocked(machine)) {
+        return;
     }
 
-    if (resources[machine.costType] >= machine.cost) {
-        function canAfford(machine) {
-            return (
-                machine &&
-                Number.isFinite(resources[machine.costType]) &&
-                Number.isFinite(machine.cost) &&
-                resources[machine.costType] >= machine.cost
-            );
-        }
+    if (!canAfford(machine)) {
+        return;
     }
-    if (canAfford(machine)) {
-        resources[machine.costType] -= machine.cost;
 
-        machine.bought = true;
-        machine.placed = false;
+    resources[machine.costType] -= machine.cost;
 
-        machineToPlace = machine;
+    machine.bought = true;
+    machine.placed = false;
+    machineToPlace = machine;
 
-        if (machine.name == "Boiler") {
-            steam.capacity += 10;
-        }
-        if (machine.name === "Warehouse") {
-            storage.capacity = Math.min(
-                storage.capacity + machine.storageBonus,
-                storage.maxCapacity
-            );
-        }
-
-        loadResource();
+    if (machine.name === "Boiler") {
+        steam.capacity += machine.steamBonus;
     }
+
+    if (machine.name === "Warehouse") {
+        storage.capacity = Math.min(
+            storage.capacity + machine.storageBonus,
+            storage.maxCapacity
+        );
+    }
+
+    loadResource();
 }
 
 function isBought(name) {
@@ -741,11 +736,19 @@ function isUnlocked(machine) {
 
 
 //Stages ----------------------------------------------------------------
+const objectives = {
+    1: "Build an Ice Extractor, Boiler, and Mine",
+    2: "Build another Boiler, Warehouse, and collect 20 metal",
+    3: "Reach 25% terraforming",
+    4: "Reach 100% terraforming",
+    5: "Keep a stable environment for 1 minute"
+};
 
 function stageUp() {
+    const previousStage = gameStage;
     const progress = getTerraformProgress();
 
-    // Stage 2: Build the first three machines
+    // Stage 2
     if (
         gameStage === 1 &&
         isBought("IceExtractor") &&
@@ -755,45 +758,44 @@ function stageUp() {
         gameStage = 2;
     }
 
-    // Stage 3: Reach resource requirements
+    // Stage 3
     if (
         gameStage === 2 &&
         resources.metal >= 20 &&
         steam.capacity >= 20
     ) {
         gameStage = 3;
-        max = 40;
     }
 
-    // Stage 4: Reach 45% terraforming
+    // Stage 4
     if (
         gameStage === 3 &&
         progress >= 25
     ) {
         gameStage = 4;
-        max = 60;
     }
 
-    // Stage 5: Reach 100% terraforming
+    // Stage 5
     if (
         gameStage === 4 &&
         progress >= 100
     ) {
         gameStage = 5;
     }
-    map.style.backgroundImage = `url("images/stage_${gameStage}.png")`;
+
+    // Only execute when the stage changes
+    if (gameStage !== previousStage) {
+        map.style.backgroundImage =
+            `url("images/stage_${gameStage}.png")`;
+
+        alert(
+            `Stage ${gameStage} unlocked! Objective: ${objectives[gameStage]}`
+        );
+    }
 }
 
 function loadStage() {
     const stageDisplay = document.querySelector("#stageDisplay");
-
-    const objectives = {
-        1: "Build an Ice Extractor, Boiler, and Mine",
-        2: "Build another Boiler, Warehouse, and collect 20 metal",
-        3: "Reach 25% terraforming",
-        4: "Reach 100% terraforming",
-        5: "Keep a stable environment for 1 minute"
-    };
 
     stageDisplay.innerHTML = `
         <h2>Stage ${gameStage}</h2>
@@ -967,3 +969,5 @@ function isConnectedToBoiler(machine) {
 
     return false;
 }
+
+timePass();
