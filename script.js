@@ -277,9 +277,8 @@ var play = true;
 //resource incrementing
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function timePass() {
-    //checks for machines []
-    //resources increase/decrease [x]
-    //timout [x]
+    startGame();
+    
     while (play == true) {
         machines.forEach(machine => {
             runMachine(machine);
@@ -788,8 +787,9 @@ function stageUp() {
         map.style.backgroundImage =
             `url("images/stage_${gameStage}.png")`;
 
-        alert(
-            `Stage ${gameStage} unlocked! Objective: ${objectives[gameStage]}`
+        showAlert(
+            `Stage ${gameStage} Unlocked!`,
+            objectives[gameStage]
         );
     }
 }
@@ -847,7 +847,10 @@ function checkWin() {
 
 function winGame() {
     play = false;
-    alert("Mars has been successfully terraformed!");
+    showAlert(
+        "Victory!",
+        "Mars has been successfully terraformed!"
+    );
 }
 
 
@@ -970,4 +973,31 @@ function isConnectedToBoiler(machine) {
     return false;
 }
 
+//ALERTS ----------------------------------------------------
+const gameAlert = document.querySelector("#gameAlert");
+const alertTitle = document.querySelector("#alertTitle");
+const alertMessage = document.querySelector("#alertMessage");
+const alertClose = document.querySelector("#alertClose");
+
+function showAlert(title, message) {
+    alertTitle.textContent = title;
+    alertMessage.textContent = message;
+
+    gameAlert.hidden = false;
+}
+
+function closeAlert() {
+    gameAlert.hidden = true;
+}
+
+alertClose.addEventListener("click", closeAlert);
+
+
+
+//GAME START ---------------------------------------------------
+function startGame() {
+    showAlert("Welcome to Mars!", "Your mission is to transform Mars into a habitable planet. Good luck!");
+}
+
+//game runs
 timePass();
