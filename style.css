@@ -194,3 +194,38 @@ main{
 .pipe-bottom {
     bottom: -16px;
 }
+
+#unplaced-machine-menu h3{
+    color: white;
+    margin-top: 0;
+}
+
+#unplaced-machine-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.unplaced-machine{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    min-width: 180px;
+    padding: 8px;
+
+    color: white;
+    background-color: #49351e;
+    border: 1px solid #c58b3a;
+    cursor: pointer;
+}
+
+.unplaced-machine:hover{
+    background-color: #76552b;
+}
+
+.unplaced-machine img{
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+}

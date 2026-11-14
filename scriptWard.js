@@ -1,6 +1,9 @@
 const grid = document.querySelector("#map");
 const tileMenu = document.querySelector("#tile-menu-popup");
 
+const unplacedMachineMenu = document.querySelector("#unplaced-machine-menu");
+const unplacedMachineList = document.querySelector("#unplaced-machine-list");
+
 let selectedTileId = null;
 
 //select tile
@@ -14,6 +17,18 @@ grid.addEventListener("click", function(event){
     selectTile(clickedTile)
 });
 
+unplacedMachineList.addEventListener("click", function(event){
+    const clickedMachine = event.target.closest(".unplaced-machine");
+
+    if (!clickedMachine){
+        return;
+    }
+
+    const machineId = Number(clickedMachine.dataset.machineId);
+
+    placeUnplacedMachine(machineId);
+    closeTileMenu();
+});
 
 function selectTile(tileElement){
     const previousTile = grid.querySelector(".tile.selected");
@@ -26,25 +41,39 @@ function selectTile(tileElement){
 
     selectedTileId = Number(tileElement.dataset.tileId)
 
-    showTileMenu(tileElement);
+    if (tileElement.dataset.occupied === "true"){
+        showTileMenu(tileElement);  
+    }else{
+        showUnplacedMachineMenu(tileElement);
+    }
+    
+}
+
+function showUnplacedMachineMenu(tileElement){
+    tileMenu.classList.remove("visible");
+
+    loadUnplacedMachineMenu();
+
+    unplacedMachineMenu.classList.add("visible");
+
+    positionMenu(unplacedMachineMenu, tileElement);
 }
 
 // place popup next to tile
-function showTileMenu(tileElement){
+function positionMenu(menuElement, tileElement){
     const tilePosition = tileElement.getBoundingClientRect();
-
     const gap = 8;
 
-    tileMenu.classList.add("visible");
+    menuElement.classList.add("visible");
 
-    const menuWidth = tileMenu.offsetWidth;
-    const menuHeight = tileMenu.offsetHeight;
+    const menuWidth = menuElement.offsetWidth;
+    const menuHeight = menuElement.offsetHeight;
 
     let menuX = tilePosition.right + gap;
     let menuY = tilePosition.top;
 
-    if (menuX + menuWidth > window.innerWidth){
-        menuY = window.innerHeight - menuHeight - gap;
+    if (menuX + menuWidth > window.innerWidth - gap){
+        menuX = tilePosition.left - menuWidth - gap;
     }
 
     if(menuX < gap){
@@ -59,23 +88,39 @@ function showTileMenu(tileElement){
         menuY = window.innerHeight - menuHeight - gap;
     }
 
-    tileMenu.style.left = `${menuX}px`
-    tileMenu.style.top = `${menuY}px`
+    menuElement.style.left = `${menuX}px`
+    menuElement.style.top = `${menuY}px`
 }
 
-window.addEventListener("resize", function(){
+function showTileMenu(tileElement){
+    unplacedMachineMenu.classList.remove("visible");
+
+    tileMenu.classList.add("visible");
+
+    positionMenu(tileMenu, tileElement);
+}
+
+window.addEventListener("resize", function() {
     const selectedTile = grid.querySelector(".tile.selected");
 
-    if(selectedTile){
-        showTileMenu(selectedTile);
+    if (selectedTile) {
+        if (selectedTile.dataset.occupied === "true") {
+            showTileMenu(selectedTile);
+        } else {
+            showUnplacedMachineMenu(selectedTile);
+        }
     }
 });
 
-window.addEventListener("scroll", function(){
+window.addEventListener("scroll", function() {
     const selectedTile = grid.querySelector(".tile.selected");
 
-    if (selectedTile){
-        showTileMenu(selectedTile);
+    if (selectedTile) {
+        if (selectedTile.dataset.occupied === "true") {
+            showTileMenu(selectedTile);
+        } else {
+            showUnplacedMachineMenu(selectedTile);
+        }
     }
 });
 
@@ -123,20 +168,26 @@ function inspectSelectedTile(){
 //close popup menu
 function closeTileMenu(){
     tileMenu.classList.remove("visible");
+    unplacedMachineMenu.classList.remove("visible");
+
     const selectedTile = grid.querySelector(".tile.selected");
 
     if(selectedTile){
         selectedTile.classList.remove("selected");
     }
+
     selectedTileId = null;
 }
 
 //click elsewhere to close menu
 document.addEventListener("click", function(event){
     const clickedTile = event.target.closest(".tile");
+
     const clickedMenu = event.target.closest("#tile-menu-popup");
 
-    if (!clickedTile && !clickedMenu){
+    const clickedUnplacedMenu = event.target.closest("#unplaced-machine-menu");
+    
+    if (!clickedTile && !clickedMenu && !clickedUnplacedMenu){
         closeTileMenu();
     }
 });
@@ -146,4 +197,5 @@ document.addEventListener("keydown", function (event){
     if (event.key === "Escape"){
         closeTileMenu();
     }
-})
+});
+

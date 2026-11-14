@@ -273,7 +273,10 @@ machines = [
     
 ]
 
-const builtMachines = []
+const builtMachines = [];
+
+const unplacedMachines = [];
+let nextMachineId = 1;
 
 var play = true;
 
@@ -284,9 +287,10 @@ async function timePass() {
     //resources increase/decrease [x]
     //timout [x]
     while (play == true) {
-        machines.forEach(machine => {
+        builtMachines.forEach(machine => {
             runMachine(machine);
         });
+
         loadResource();
         stageUp();
         loadTerraformProgress();
@@ -388,6 +392,70 @@ function loadResource() {
         <p>Available: ${getStorageAvailable().toFixed(1)}</p>`;
 }
 
+function loadUnplacedMachineMenu(){
+    unplacedMachineList.innerHTML = "";
+
+    if (unplacedMachines.length === 0){
+        unplacedMachineList.innerHTML = "<p>No unplaced machines</p>";
+
+        return;
+    }
+    unplacedMachines.forEach(machine => {
+        const machineButton = document.createElement("button");
+            
+        machineButton.classList.add("unplaced-machine");
+
+        machineButton.dataset.machineId = machine.id;
+
+        machineButton.innerHTML = `
+            <span>
+                ${formatMachineName(machine.name)}
+            </span>
+
+            <img
+                src="images/${machine.name}.png"
+                alt="${formatMachineName(machine.name)}"
+            >
+        `;
+
+        unplacedMachineList.appendChild(machineButton);
+    });
+}
+
+function placeUnplacedMachine(machineId){
+    const selectedTile = document.querySelector("#map .tile.selected");
+
+    if (!selectedTile){
+        return;
+    }
+
+    if(selectedTile.dataset.occupied === "true"){
+        return;
+    }
+
+    const machineIndex = unplacedMachines.findIndex(machine => machine.id === machineId);
+
+    if (machineIndex === -1){
+        return;
+    }
+
+    const machine = unplacedMachines[machineIndex];
+
+    selectedTile.innerHTML = `<img src="images/${machine.name}.png" alt="${formatMachineName(machine.name)}">`;
+
+    selectedTile.dataset.occupied = "true";
+
+    machine.location = selectedTile;
+    machine.placed = true;
+
+    unplacedMachines.splice(machineIndex, 1);
+    builtMachines.push(machine);
+
+    loadResource();
+
+    console.log(`${machine.name} placed on ${selectedTile.id}`);
+}
+
 timePass();
 
 //place machine
@@ -397,7 +465,7 @@ function placeMachine(tile) {
         console.log("There is no machine waiting to be placed.");
         return;
     }
-
+    
     if(tile.dataset.occupied === "true"){
         console.log("That tile is already occupied");
         return;
@@ -446,7 +514,7 @@ function removeSelectedMachine(){
         return;
     }
 
-    const machine = machines.find(machine =>
+    const machine = builtMachines.find(machine =>
         machine.location === selectedTile &&
         machine.placed ===true
     );
@@ -492,8 +560,6 @@ function loadShop(){
             isUnlocked(machine);
 
         const machineAvailable = 
-            !machine.bought &&
-            !machineToPlace &&
             hasEnoughResources &&
             stageRequirementMet;
 
@@ -684,7 +750,7 @@ discWater.addEventListener("click", () => {
 
 //SPENDING ------------------------------------------------------------------
 function buy(machine) {
-    if (!machine || machine.bought || machineToPlace) {
+    if (!machine) {
         return;
     }
 
@@ -692,36 +758,47 @@ function buy(machine) {
         return
     }
 
-    if (resources[machine.costType] >= machine.cost) {
-        function canAfford(machine) {
-            return (
-                machine &&
-                Number.isFinite(resources[machine.costType]) &&
-                Number.isFinite(machine.cost) &&
-                resources[machine.costType] >= machine.cost
-            );
-        }
+    if (resources[machine.costType] < machine.cost) {
+        return;
     }
-    if (canAfford(machine)) {
-        resources[machine.costType] -= machine.cost;
+    
+    resources[machine.costType] -= machine.cost;
 
-        machine.bought = true;
-        machine.placed = false;
+    const purchasedMachine = createMachineInstance(machine);
 
-        machineToPlace = machine;
+    unplacedMachines.push(purchasedMachine);
 
-        if (machine.name == "Boiler") {
-            steam.capacity += 10;
-        }
-        if (machine.name === "Warehouse") {
-            storage.capacity = Math.min(
-                storage.capacity + machine.storageBonus,
-                storage.maxCapacity
-            );
-        }
-
-        loadResource();
+    if (machine.name == "Boiler") {
+        steam.capacity += 10;
     }
+
+    if (machine.name === "Warehouse") {
+        storage.capacity = Math.min(
+            storage.capacity + machine.storageBonus,
+            storage.maxCapacity
+        );
+    }
+    
+    loadResource();
+}
+
+function createMachineInstance(machineType){
+    return{
+        ...machineType,
+
+        id: nextMachineId++,
+        location: null,
+        bought: true,
+        placed: false,
+
+        inputs: {
+            ...machineType.inputs
+        },
+
+        outputs: {
+            ...machineType.outputs
+        }
+    };
 }
 
 function isBought(name) {
