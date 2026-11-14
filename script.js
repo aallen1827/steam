@@ -34,6 +34,13 @@ const resources = {
     oxygen: 0
 }
 
+const environment = {
+    temperature: 0,
+    pressure: 0,
+    oxygen: 0,
+    biosphere: 0
+}
+
 var max = 20;
 
 
@@ -56,11 +63,13 @@ machines = [
         location: a0,
         bought: false,
         nextBuy: "Boiler",
-        inputType: null,
-        inputAmount: 0,
-        outputType: "water",
-        outputAmount: 2,
-        active: true
+        inputs: {},
+        outputs: {
+            water: 2
+        },
+        active: true,
+        efficiency: 1,
+        unlocked: true
     },
     {
         name: "Boiler",
@@ -69,11 +78,15 @@ machines = [
         location: a1,
         bought: false,
         nextBuy: "Mine",
-        inputType: "water",
-        inputAmount: 1,
-        outputType: "steam",
-        outputAmount: 1,
-        active: true
+        inputs: {
+            water: 1
+        },
+        outputs: {
+            steam: 2
+        },
+        active: true,
+        efficiency: 1,
+        unlocked: true
     },
     {
         name: "Mine",
@@ -82,24 +95,33 @@ machines = [
         location: a2,
         bought: false,
         nextBuy: "Smelter",
-        inputType: "steam",
-        inputAmount: 1,
-        outputType: "metal",
-        outputAmount: 2,
-        active: true
+        inputs: {
+            steam: 1
+        },
+        outputs: {
+            ore: 2
+        },
+        active: true,
+        efficiency: 1,
+        unlocked: true
     },
     {
         name: "Smelter",
-        costType: "metal",
+        costType: "ore",
         cost: 20,
         location: a3,
         bought: false,
         nextBuy: "Greenhouse",
-        inputType: "metal",
-        inputAmount: 1,
-        outputType: "metal",
-        outputAmount: 2,
-        active: true
+        inputs: {
+            ore: 2,
+            steam: 1
+        },
+        outputs: {
+            metal: 2
+        },
+        active: true,
+        efficiency: 1,
+        unlocked: false
     },
     {
         name: "Greenhouse",
@@ -107,12 +129,91 @@ machines = [
         cost: 20,
         location: a4,
         bought: false,
+        nextBuy: "Atmospheric Processor",
+        inputs: {
+            steam: 2
+        },
+        outputs: {
+            oxygen: 2
+        },
+        active: true,
+        efficiency: 1,
+        unlocked: false
+    },
+    {
+        name: "Atmospheric Processor",
+        costType: "metal",
+        cost: 30,
+        location: a4,
+        bought: false,
+        nextBuy: "Heating Tower",
+        inputs: {
+            oxygen: 3,
+            steam: 2
+        },
+        outputs: {
+            oxygen: 0.2
+        },
+        outputTarget: "environment",
+        active: true,
+        efficiency: 1,
+        unlocked: false
+    },
+    {
+        name: "Heating Tower",
+        costType: "metal",
+        cost: 40,
+        location: a4,
+        bought: false,
+        nextBuy: "Pressure Generator",
+        inputs: {
+            steam: 4
+        },
+        outputs: {
+            temperature: 0.3
+        },
+        outputTarget: "environment",
+        active: true,
+        efficiency: 1,
+        unlocked: false
+    },
+    {
+        name: "Pressure Generator",
+        costType: "metal",
+        cost: 50,
+        location: a4,
+        bought: false,
+        nextBuy: "Biospheric Dome",
+        inputs: {
+            steam: 3,
+            water: 2
+        },
+        outputs: {
+            pressure: 0.5
+        },
+        outputTarget: "environment",
+        active: true,
+        efficiency: 1,
+        unlocked: false
+    },
+    {
+        name: "Biospheric Dome",
+        costType: "metal",
+        cost: 60,
+        location: a4,
+        bought: false,
         nextBuy: "Something",
-        inputType: "steam",
-        inputAmount: 2,
-        outputType: "oxygen",
-        outputAmount: 2,
-        active: true
+        inputs: {
+            water: 2,
+            oxygen: 3
+        },
+        outputs: {
+            biosphere: 0.2
+        },
+        outputTarget: "environment",
+        active: true,
+        efficiency: 1,
+        unlocked: false
     }
     
 ]
@@ -146,15 +247,28 @@ function runMachine(machine) {
         return;
     }
 
-    if (machine.inputType !== null) {
-        if (resources[machine.inputType] < machine.inputAmount) {
+    // Check if output is full
+    if (resources[machine.outputType] >= max) {
+        return;
+    }
+
+    // Check if all input resources are available
+    for (let resource in machine.inputs) {
+        if (resources[resource] < machine.inputs[resource]) {
             return;
         }
-        resources[machine.inputType] -= machine.inputAmount;
     }
-    if (resources[machine.outputType] < max) {
-        resources[machine.outputType] += machine.outputAmount;
+
+    // Consume all required resources
+    for (let resource in machine.inputs) {
+        resources[resource] -= machine.inputs[resource];
     }
+
+    // Produce output
+    resources[machine.outputType] = Math.min(
+        resources[machine.outputType] + machine.outputAmount,
+        max
+    );
 }
 
 function loadResource() {
@@ -188,12 +302,27 @@ function placeMachine(tile) {
 
 //SPENDING ------------------------------------------------------------------
 function buy(machine) {
+    if (!machine || machine.bought) {
+        return;
+    }
+
     if (resources[machine.costType] >= machine.cost) {
         resources[machine.costType] -= machine.cost;
-        machine.location.innerHTML = `<img src="images/${machine.name}.png"></img>`;
-        machineOrder += 1;
-        buyButton.textContent = `Buy ${machine.nextBuy} for ${machines[machineOrder].cost} ${machines[machineOrder].costType}`;
+
+        machine.location.innerHTML = `<img src="images/${machine.name}.png">`;
         machine.bought = true;
+
+        machineOrder += 1;
+
+        if (machineOrder < machines.length) {
+            let nextMachine = machines[machineOrder];
+
+            buyButton.textContent = `Buy ${nextMachine.name} for ${nextMachine.cost} ${nextMachine.costType}`;
+        } else {
+            buyButton.textContent = "All machines purchased";
+            buyButton.disabled = true;
+        }
+
         loadResource();
     }
 }
