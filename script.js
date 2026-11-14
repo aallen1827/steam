@@ -280,8 +280,6 @@ var play = true;
 //resource incrementing
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function timePass() {
-    startGame();
-    
     while (play == true) {
         builtMachines.forEach(machine => {
             runMachine(machine);
@@ -437,22 +435,37 @@ function placeUnplacedMachine(machineId){
 
     const machine = unplacedMachines[machineIndex];
 
-    selectedTile.innerHTML = `<img src="images/${machine.name}.png" alt="${formatMachineName(machine.name)}">`;
+    selectedTile.innerHTML = `
+        <img class="machine-img"
+         src="images/${machine.name}.png"
+         alt="${formatMachineName(machine.name)}">
+    `;
 
     selectedTile.dataset.occupied = "true";
 
     machine.location = selectedTile;
     machine.placed = true;
+    checkNeighbors(selectedTile);
 
     unplacedMachines.splice(machineIndex, 1);
     builtMachines.push(machine);
+
+    if (machine.name === "Boiler") {
+        steam.capacity = Math.min(steam.capacity + 10, 30);
+    }
+
+    if (machine.name === "Warehouse") {
+        storage.capacity = Math.min(
+            storage.capacity + machine.storageBonus,
+            storage.maxCapacity
+        );
+    }
 
     loadResource();
 
     console.log(`${machine.name} placed on ${selectedTile.id}`);
 }
 
-timePass();
 
 //place machine
 function placeMachine(tile) {
@@ -600,10 +613,8 @@ function getEfficiency(machine) {
 function getAllocatedSteam() {
     let total = 0;
 
-    machines.forEach(machine => {
-        if (machine.bought) {
-            total += machine.steamAllocated;
-        }
+    builtMachines.forEach(machine => {
+        total += machine.steamAllocated;
     });
 
     return total;
@@ -642,7 +653,7 @@ const closeSteam = document.querySelector("#closeSteam");
 function loadSteamMenu() {
     steamControls.innerHTML = "";
 
-    machines.forEach(machine => {
+    builtMachines.forEach(machine => {
         if (!machine.bought || machine.steamRequired === 0) {
             return;
         }
@@ -772,29 +783,19 @@ function buy(machine) {
     const purchasedMachine = createMachineInstance(machine);
 
     unplacedMachines.push(purchasedMachine);
-
-    if (machine.name == "Boiler") {
-        steam.capacity += 10;
-    }
-
-    if (machine.name === "Warehouse") {
-        storage.capacity = Math.min(
-            storage.capacity + machine.storageBonus,
-            storage.maxCapacity
-        );
-    }
     
     loadResource();
 }
 
-function createMachineInstance(machineType){
-    return{
+function createMachineInstance(machineType) {
+    return {
         ...machineType,
 
         id: nextMachineId++,
         location: null,
         bought: true,
         placed: false,
+        steamAllocated: 0,
 
         inputs: {
             ...machineType.inputs
@@ -804,12 +805,10 @@ function createMachineInstance(machineType){
             ...machineType.outputs
         }
     };
-
-    loadResource();
 }
 
 function isBought(name) {
-    return machines.some(machine =>
+    return builtMachines.some(machine =>
         machine.name === name &&
         machine.bought &&
         machine.placed
@@ -1089,4 +1088,5 @@ function startGame() {
 }
 
 //game runs
+startGame();
 timePass();
