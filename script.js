@@ -42,7 +42,7 @@ const steam = {
 
 const storage = {
     capacity: 30,
-    allocated: 0
+    maxCapacity: 60
 };
 
 const environment = {
@@ -59,10 +59,6 @@ var max = 20;
 var machineToPlace = null;
 
 //-------------------------------- Test Event Listeners ----------------------------
-a1.addEventListener("click", () => {
-    resources.water -= 5;
-    loadResource();
-})
 buyButton.addEventListener("click", () => {
     buy(machines[machineOrder]);
 })
@@ -94,17 +90,14 @@ machines = [
         location: a1,
         bought: false,
         nextBuy: "Mine",
-        inputs: {
-            water: 1
-        },
-        outputs: {
-            steam: 20
-        },
+        inputs: {},
+        outputs: {},
         active: true,
         efficiency: 1,
         stageRequired: 1,
         steamRequired: 0,
-        steamAllocated: 0
+        steamAllocated: 0,
+        steamBonus: 10
     },
     {
         name: "Mine",
@@ -247,7 +240,10 @@ machines = [
         steamRequired: 0,
         steamAllocated: 0,
         stageRequired: 2,
-        storageBonus: 15
+        storageBonus: 15,
+        bought: false,
+        placed: false,
+        active: true
     }
     
 ]
@@ -412,7 +408,7 @@ function placeSelectedMachine(){
 }
 
 
-//PIPES ---------------------------------------------------------------------
+//STEAM ---------------------------------------------------------------------
 function getEfficiency(machine) {
     if (machine.steamRequired === 0) {
         return 1;
@@ -438,7 +434,7 @@ function allocateSteam(machine, amount) {
         return false;
     }
 
-    if (amount < 0 || amount > machine.steamRequired) {
+    if (amount < 0 || amount > machine.steamRequired * 2) {
         return false;
     }
 
@@ -479,7 +475,7 @@ function loadSteamMenu() {
             <input
                 type="range"
                 min="0"
-                max="${machine.steamRequired}"
+                max="${machine.steamRequired * 2}"
                 step="1"
                 value="${machine.steamAllocated}"
             >
@@ -518,9 +514,12 @@ closeSteam.addEventListener("click", () => {
 
 //STORAGE -------------------------------------------------------------------
 function getStorageUsed() {
-    return Object.values(resources).reduce (
-        (total, amount) => total + amount, 0
-    )
+    return (
+        resources.water +
+        resources.metal +
+        resources.ore +
+        resources.oxygen
+    );
 }
 
 function getStorageAvailable() {
@@ -551,6 +550,15 @@ closeResource.addEventListener("click", () => {
     resourceInfo.style.display = "none";
 })
 
+discOre.addEventListener("click", () => {
+    discardResource("ore", 10);
+})
+discOxygen.addEventListener("click", () => {
+    discardResource("oxygen", 10);
+})
+discMetal.addEventListener("click", () => {
+    discardResource("metal", 10);
+})
 discWater.addEventListener("click", () => {
     discardResource("water", 10);
 })
@@ -561,8 +569,15 @@ function buy(machine) {
     if (!machine || machine.bought || machineToPlace) {
         return;
     }
-
-    if (resources[machine.costType] >= machine.cost) {
+    function canAfford(machine) {
+        return (
+            machine &&
+            Number.isFinite(resources[machine.costType]) &&
+            Number.isFinite(machine.cost) &&
+            resources[machine.costType] >= machine.cost
+        );
+    }
+    if (canAfford(machine)) {
         resources[machine.costType] -= machine.cost;
 
         machine.bought = true;
@@ -643,7 +658,7 @@ function stageUp() {
     if (
         gameStage === 2 &&
         resources.metal >= 20 &&
-        resources.steam >= 15
+        steam.capacity >= 20
     ) {
         gameStage = 3;
         max = 40;
@@ -672,7 +687,7 @@ function loadStage() {
 
     const objectives = {
         1: "Build an Ice Extractor, Boiler, and Mine",
-        2: "Collect 20 metal and 15 steam",
+        2: "Build another Boiler, Warehouse, and collect 20 metal",
         3: "Reach 25% terraforming",
         4: "Reach 100% terraforming",
         5: "Keep a stable environment for 1 minute"
