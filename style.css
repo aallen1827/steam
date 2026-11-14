@@ -549,11 +549,11 @@ button:focus-visible,
 }
 
 .pipe-top {
-    top: calc(-1 * var(--pipe-gap) / 2 - 24px);
+    top: calc(-1 * var(--pipe-gap) / 2 - 14px);
 }
 
 .pipe-bottom {
-    bottom: -16px;
+    bottom: -31px;
 }
 
 /* UNPLACED MACHINE MENU -------------------------------- */
