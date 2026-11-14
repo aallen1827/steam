@@ -58,29 +58,29 @@
             <aside id="gameSidebar">
 
                 <!-- STAGE INFORMATION -->
-                <section class="info-panel">
+                <section id="stagePanel" class="info-panel">
                     <div id="stageDisplay"></div>
                 </section>
 
                 <!-- RESOURCE MANAGEMENT BUTTON -->
                 <button id="resourceButton" class="sidebar-button">
-                    Manage Resources
+                    Warehouse Storage
                 </button>
 
                 <!-- STEAM MANAGEMENT BUTTON -->
                 <button id="steamButton" class="sidebar-button">
-                    Manage Steam
+                    Valve Control
                 </button>
 
                 <!-- MACHINE SHOP BUTTON -->
                 <div id="buttons">
                     <button id="buy" class="sidebar-button">
-                        Open Shop
+                        Shop
                     </button>
                 </div>
 
                 <!-- TERRAFORMING PROGRESS -->
-                <section class="info-panel">
+                <section id="terraformPanel" class="info-panel">
                     <div id="terraformProgress"></div>
                 </section>
 
@@ -93,11 +93,11 @@
         <!-- RESOURCE MENU -->
         <div id="resourceMenu" class="shop-menu" hidden>
             <div class="shop-header">
-                <h2>Manage Resources</h2>
+                <h2>Warehouse Storage</h2>
                 <button id="closeResource">Close</button>
             </div>
 
-            <h3>Warehouse Storage</h3>
+            <h3>Manage Resources</h3>
             <p id="storageInfo"></p>
 
             <h3>Discard Resources</h3>
@@ -113,7 +113,7 @@
         <!-- STEAM MENU -->
         <div id="steamMenu" class="shop-menu" hidden>
             <div class="shop-header">
-                <h2>Manage Steam</h2>
+                <h2>Valve Control</h2>
                 <button id="closeSteam">Close</button>
             </div>
 
@@ -135,8 +135,8 @@
         <!-- TILE ACTION MENU -->
         <div class="tile-menu-popup" id="tile-menu-popup">
             <button id="toggle-production-button" data-action="toggle-production">Stop Production</button>
-            <button data-action="remove">remove</button>
-            <button data-action="close">close menu</button>
+            <button data-action="remove">Remove</button>
+            <button data-action="close">Close Menu</button>
         </div>
 
         <!-- UNPLACED MACHINE MENU -->
