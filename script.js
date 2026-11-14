@@ -144,10 +144,10 @@ machines = [
         stageRequired: 2
     },
     {
-        name: "Atmospheric Processor",
+        name: "AtmosphericProcessor",
         costType: "metal",
         cost: 30,
-        location: a4,
+        location: b0,
         bought: false,
         nextBuy: "Heating Tower",
         inputs: {
@@ -163,10 +163,10 @@ machines = [
         stageRequired: 3
     },
     {
-        name: "Heating Tower",
+        name: "HeatingTower",
         costType: "metal",
         cost: 40,
-        location: a4,
+        location: b1,
         bought: false,
         nextBuy: "Pressure Generator",
         inputs: {
@@ -181,10 +181,10 @@ machines = [
         stageRequired: 3
     },
     {
-        name: "Pressure Generator",
+        name: "PressureGenerator",
         costType: "metal",
         cost: 50,
-        location: a4,
+        location: b2,
         bought: false,
         nextBuy: "Biospheric Dome",
         inputs: {
@@ -200,10 +200,10 @@ machines = [
         stageRequired: 4
     },
     {
-        name: "Biospheric Dome",
+        name: "BiosphericDome",
         costType: "metal",
         cost: 60,
-        location: a4,
+        location: b3,
         bought: false,
         nextBuy: "Something",
         inputs: {
