@@ -21,6 +21,7 @@ const d3 = document.querySelector("#tile19");
 const d4 = document.querySelector("#tile20");
 const resourceBar = document.querySelector("#resourceBar");
 const buyButton = document.querySelector("#buy");
+const steamDisplay = document.querySelector("#steam");
 
 
 
@@ -30,10 +31,19 @@ const buyButton = document.querySelector("#buy");
 const resources = {
     water: 10,
     metal: 10,
-    steam: 0,
     oxygen: 0,
     ore: 0
 }
+
+const steam = {
+    capacity: 0,
+    allocated: 0,
+};
+
+const storage = {
+    capacity: 30,
+    allocated: 0
+};
 
 const environment = {
     temperature: 0,
@@ -69,11 +79,13 @@ machines = [
         nextBuy: "Boiler",
         inputs: {},
         outputs: {
-            water: 20
+            water: 2
         },
         active: true,
         efficiency: 1,
-        stageRequired: 1
+        stageRequired: 1,
+        steamRequired: 0,
+        steamAllocated: 0
     },
     {
         name: "Boiler",
@@ -90,7 +102,9 @@ machines = [
         },
         active: true,
         efficiency: 1,
-        stageRequired: 1
+        stageRequired: 1,
+        steamRequired: 0,
+        steamAllocated: 0
     },
     {
         name: "Mine",
@@ -99,15 +113,15 @@ machines = [
         location: a2,
         bought: false,
         nextBuy: "Smelter",
-        inputs: {
-            steam: 1
-        },
+        inputs: {},
         outputs: {
-            ore: 20
+            ore: 2
         },
         active: true,
         efficiency: 1,
-        stageRequired: 1
+        stageRequired: 1,
+        steamRequired: 1,
+        steamAllocated: 0
     },
     {
         name: "Smelter",
@@ -118,14 +132,15 @@ machines = [
         nextBuy: "Greenhouse",
         inputs: {
             ore: 2,
-            steam: 1
         },
         outputs: {
-            metal: 20
+            metal: 2
         },
         active: true,
         efficiency: 1,
-        stageRequired: 2
+        stageRequired: 2,
+        steamRequired: 1,
+        steamAllocated: 0
     },
     {
         name: "Greenhouse",
@@ -134,15 +149,15 @@ machines = [
         location: a4,
         bought: false,
         nextBuy: "Atmospheric Processor",
-        inputs: {
-            steam: 2
-        },
+        inputs: {},
         outputs: {
-            oxygen: 20
+            oxygen: 2
         },
         active: true,
         efficiency: 1,
-        stageRequired: 2
+        stageRequired: 2,
+        steamRequired: 2,
+        steamAllocated: 0
     },
     {
         name: "AtmosphericProcessor",
@@ -153,7 +168,6 @@ machines = [
         nextBuy: "Heating Tower",
         inputs: {
             oxygen: 3,
-            steam: 2
         },
         outputs: {
             atmosphere: 20
@@ -161,7 +175,9 @@ machines = [
         outputTarget: "environment",
         active: true,
         efficiency: 1,
-        stageRequired: 3
+        stageRequired: 3,
+        steamRequired: 2,
+        steamAllocated: 0
     },
     {
         name: "HeatingTower",
@@ -170,16 +186,16 @@ machines = [
         location: b1,
         bought: false,
         nextBuy: "Pressure Generator",
-        inputs: {
-            steam: 4
-        },
+        inputs: {},
         outputs: {
             temperature: 20
         },
         outputTarget: "environment",
         active: true,
         efficiency: 1,
-        stageRequired: 3
+        stageRequired: 3,
+        steamRequired: 4,
+        steamAllocated: 0
     },
     {
         name: "PressureGenerator",
@@ -189,7 +205,6 @@ machines = [
         bought: false,
         nextBuy: "Biospheric Dome",
         inputs: {
-            steam: 3,
             water: 2
         },
         outputs: {
@@ -198,7 +213,9 @@ machines = [
         outputTarget: "environment",
         active: true,
         efficiency: 1,
-        stageRequired: 4
+        stageRequired: 4,
+        steamRequired: 3,
+        steamAllocated: 0
     },
     {
         name: "BiosphericDome",
@@ -217,7 +234,20 @@ machines = [
         outputTarget: "environment",
         active: true,
         efficiency: 1,
-        stageRequired: 4
+        stageRequired: 4,
+        steamRequired: 0,
+        steamAllocated: 0
+    },
+    {
+        name: "Warehouse",
+        costType: "metal",
+        cost: 10,
+        inputs: {},
+        outputs: {},
+        steamRequired: 0,
+        steamAllocated: 0,
+        stageRequired: 2,
+        storageBonus: 15
     }
     
 ]
@@ -259,45 +289,78 @@ function runMachine(machine) {
         return;
     }
 
+    const efficiency = getEfficiency(machine);
+
+    if (efficiency <= 0) return;
+
     const target = machine.outputTarget === "environment"
-        ? environment
-        : resources;
+    ? environment
+    : resources;
 
-    // Check if all outputs are full
-    const outputMax = machine.outputTarget === "environment" ? 100 : max;
+    // Stop if all environmental outputs are at 100%
+    if (
+        machine.outputTarget === "environment" &&
+        Object.keys(machine.outputs).every(
+            resource => target[resource] >= 100
+        )
+    ) {
+        return;
+    }
+    // Check whether all inputs are available
+    
 
-    const outputsFull = Object.keys(machine.outputs).every(resource => {
-        return target[resource] >= outputMax;
-    })
-    if (outputsFull) return;
-
-    // Check all inputs
     for (let resource in machine.inputs) {
-        if (resources[resource] < machine.inputs[resource]) {
+        const requiredAmount = machine.inputs[resource] * efficiency;
+
+        if (resources[resource] < requiredAmount) {
+            return;
+        }
+    }
+
+    // Calculate how much storage the machine will use
+    if (machine.outputTarget !== "environment") {
+        const totalInput = Object.entries(machine.inputs).reduce(
+            (total, [resource, amount]) => {
+                return total + amount * efficiency;
+            },
+            0
+        );
+
+        const totalOutput = Object.values(machine.outputs).reduce(
+            (total, amount) => total + amount * efficiency,
+            0
+        );
+
+        const storageAfterProduction =
+            getStorageUsed() - totalInput + totalOutput;
+
+        if (storageAfterProduction > storage.capacity) {
             return;
         }
     }
 
     // Consume inputs
     for (let resource in machine.inputs) {
-        resources[resource] -= machine.inputs[resource];
+        resources[resource] -= machine.inputs[resource] * efficiency;
     }
 
     // Produce outputs
     for (let resource in machine.outputs) {
-        const maxAmount = machine.outputTarget === "environment"
-            ? 100
-            : max;
-
-        target[resource] = Math.min(
-            target[resource] + machine.outputs[resource],
-            maxAmount
-        )
+        if (machine.outputTarget === "environment") {
+            environment[resource] = Math.min(
+                environment[resource] + machine.outputs[resource] * efficiency,
+                100
+            );
+        } else {
+            resources[resource] += machine.outputs[resource] * efficiency;
+        }
     }
 }
 
 function loadResource() {
-    resourceBar.innerHTML = `<h1>Water: ${resources.water}</h1> <h1>Steam: ${resources.steam}</h1> <h1>Ore: ${resources.ore}</h1> <h1>Metal: ${resources.metal}</h1> <h1>Oxygen: ${resources.oxygen}</h1>`;
+    resourceBar.innerHTML = `<h1>Water: ${resources.water}</h1> <h1>Ore: ${resources.ore}</h1> <h1>Metal: ${resources.metal}</h1> <h1>Oxygen: ${resources.oxygen}</h1>`;
+    steamDisplay.innerHTML = `<h2>Warehouse: ${getStorageUsed()} / ${storage.capacity}</h2>
+        <p>Available: ${getStorageAvailable().toFixed(1)}</p>`;
 }
 
 timePass();
@@ -350,7 +413,147 @@ function placeSelectedMachine(){
 
 
 //PIPES ---------------------------------------------------------------------
+function getEfficiency(machine) {
+    if (machine.steamRequired === 0) {
+        return 1;
+    }
 
+    return machine.steamAllocated / machine.steamRequired;
+}
+
+function getAllocatedSteam() {
+    let total = 0;
+
+    machines.forEach(machine => {
+        if (machine.bought) {
+            total += machine.steamAllocated;
+        }
+    });
+
+    return total;
+}
+
+function allocateSteam(machine, amount) {
+    if (!machine.bought || !machine.active) {
+        return false;
+    }
+
+    if (amount < 0 || amount > machine.steamRequired) {
+        return false;
+    }
+
+    const currentlyAllocated = getAllocatedSteam();
+
+    const newTotal =
+        currentlyAllocated - machine.steamAllocated + amount;
+
+    if (newTotal > steam.capacity) {
+        return false;
+    }
+
+    machine.steamAllocated = amount;
+
+    return true;
+}
+
+//steam button function
+const steamButton = document.querySelector("#steamButton");
+const steamMenu = document.querySelector("#steamMenu");
+const steamControls = document.querySelector("#steamControls");
+const steamDisplayer = document.querySelector("#steamDisplay");
+const closeSteam = document.querySelector("#closeSteam");
+
+function loadSteamMenu() {
+    steamControls.innerHTML = "";
+
+    machines.forEach(machine => {
+        if (!machine.bought || machine.steamRequired === 0) {
+            return;
+        }
+
+        const container = document.createElement("div");
+
+        container.innerHTML = `
+            <h3>${machine.name}</h3>
+
+            <input
+                type="range"
+                min="0"
+                max="${machine.steamRequired}"
+                step="1"
+                value="${machine.steamAllocated}"
+            >
+
+            <span>${machine.steamAllocated} / ${machine.steamRequired}</span>
+        `;
+
+        const slider = container.querySelector("input");
+
+        slider.addEventListener("input", () => {
+            const amount = Number(slider.value);
+
+            if (allocateSteam(machine, amount)) {
+                loadSteamMenu();
+            } else {
+                slider.value = machine.steamAllocated;
+            }
+        });
+
+        steamControls.appendChild(container);
+    });
+
+    steamDisplayer.textContent =
+        `Steam: ${steam.capacity - getAllocatedSteam()} / ${steam.capacity}`;
+}
+
+steamButton.addEventListener("click", () => {
+    loadSteamMenu();
+    steamMenu.style.display = "block";
+});
+
+closeSteam.addEventListener("click", () => {
+    steamMenu.style.display = "none";
+});
+
+
+//STORAGE -------------------------------------------------------------------
+function getStorageUsed() {
+    return Object.values(resources).reduce (
+        (total, amount) => total + amount, 0
+    )
+}
+
+function getStorageAvailable() {
+    return Math.max(0, storage.capacity - getStorageUsed());
+}
+
+//discard resources
+function discardResource(resource, amount) {
+    resources[resource] = Math.max(
+        0,
+        resources[resource] - amount
+    );
+    loadResource();
+}
+
+const discWater = document.querySelector("#water");
+const discOre = document.querySelector("#ore");
+const discMetal = document.querySelector("#metal");
+const discOxygen = document.querySelector("#oxygen");
+const resourceButton = document.querySelector("#resourceButton");
+const resourceInfo = document.querySelector("#resourceMenu");
+const closeResource = document.querySelector("#closeResource")
+resourceButton.addEventListener("click", () => {
+    resourceInfo.style.display = "block";
+})
+
+closeResource.addEventListener("click", () => {
+    resourceInfo.style.display = "none";
+})
+
+discWater.addEventListener("click", () => {
+    discardResource("water", 10);
+})
 
 
 //SPENDING ------------------------------------------------------------------
@@ -364,11 +567,31 @@ function buy(machine) {
 
         machine.bought = true;
         machine.placed = false;
+        if (steamMenu.style.display === "block") {
+            loadSteamMenu();
+        }
 
         machineToPlace = machine;
 
         buyButton.textContent = `Place ${machine.name} on a tile`;
         buyButton.disabled = true;
+        if (machineOrder < machines.length) {
+            let nextMachine = machines[machineOrder];
+
+            buyButton.textContent = `Buy ${nextMachine.name} for ${nextMachine.cost} ${nextMachine.costType}`;
+        } else {
+            buyButton.textContent = "All machines purchased";
+            buyButton.disabled = true;
+        }
+        if (machine.name == "Boiler") {
+            steam.capacity += 10;
+        }
+        if (machine.name === "Warehouse") {
+            storage.capacity = Math.min(
+                storage.capacity + machine.storageBonus,
+                storage.maxCapacity
+            );
+        }
 
         loadResource();
     }
