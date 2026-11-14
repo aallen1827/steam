@@ -410,6 +410,10 @@ function runMachine(machine) {
 function loadResource() {
     resourceBar.innerHTML = `<h1>Water: ${resources.water}</h1> <h1>Ore: ${resources.ore}</h1> <h1>Metal: ${resources.metal}</h1> <h1>Oxygen: ${resources.oxygen}</h1>`;
     steamDisplay.innerHTML = `<h2>Warehouse: ${getStorageUsed()} / ${storage.capacity}</h2>`;
+    
+    if (!shopMenu.hidden) {
+        loadShop();
+    }
 }
 
 function loadUnplacedMachineMenu(){
