@@ -45,7 +45,7 @@ const steam = {
 
 const storage = {
     capacity: 30,
-    allocated: 0
+    maxCapacity: 60
 };
 
 const environment = {
@@ -115,17 +115,14 @@ machines = [
         location: a1,
         bought: false,
         nextBuy: "Mine",
-        inputs: {
-            water: 1
-        },
-        outputs: {
-            steam: 20
-        },
+        inputs: {},
+        outputs: {},
         active: true,
         efficiency: 1,
         stageRequired: 1,
         steamRequired: 0,
-        steamAllocated: 0
+        steamAllocated: 0,
+        steamBonus: 10
     },
     {
         name: "Mine",
@@ -268,7 +265,10 @@ machines = [
         steamRequired: 0,
         steamAllocated: 0,
         stageRequired: 2,
-        storageBonus: 15
+        storageBonus: 15,
+        bought: false,
+        placed: false,
+        active: true
     }
     
 ]
@@ -304,6 +304,13 @@ function addResource(resource) {
 
 function runMachine(machine) {
     if (!machine.bought || !machine.placed || !machine.active) {
+        return;
+    }
+
+    if (
+        machine.steamRequired > 0 &&
+        !isConnectedToBoiler(machine)
+    ) {
         return;
     }
 
@@ -398,12 +405,17 @@ function placeMachine(tile) {
 
     const machine = machineToPlace;
 
-    tile.innerHTML = `<img src="images/${machine.name}.png" alt="${machine.name}">`;
+    tile.innerHTML = `
+        <img class="machine-img"
+         src="images/${machine.name}.png"
+         alt="${machine.name}">
+    `;
     
     tile.dataset.occupied = "true";
 
     machine.location = tile;
     machine.placed = true;
+    checkNeighbors(tile);
 
     builtMachines.push(machine);
 
@@ -514,6 +526,7 @@ function formatMachineName(machineName){
     return machineName.replace(/([a-z])([A-Z])/g, "$1 $2");
 }
 //PIPES ---------------------------------------------------------------------
+//STEAM ---------------------------------------------------------------------
 function getEfficiency(machine) {
     if (machine.steamRequired === 0) {
         return 1;
@@ -539,7 +552,7 @@ function allocateSteam(machine, amount) {
         return false;
     }
 
-    if (amount < 0 || amount > machine.steamRequired) {
+    if (amount < 0 || amount > machine.steamRequired * 2) {
         return false;
     }
 
@@ -580,7 +593,7 @@ function loadSteamMenu() {
             <input
                 type="range"
                 min="0"
-                max="${machine.steamRequired}"
+                max="${machine.steamRequired * 2}"
                 step="1"
                 value="${machine.steamAllocated}"
             >
@@ -619,9 +632,12 @@ closeSteam.addEventListener("click", () => {
 
 //STORAGE -------------------------------------------------------------------
 function getStorageUsed() {
-    return Object.values(resources).reduce (
-        (total, amount) => total + amount, 0
-    )
+    return (
+        resources.water +
+        resources.metal +
+        resources.ore +
+        resources.oxygen
+    );
 }
 
 function getStorageAvailable() {
@@ -652,6 +668,15 @@ closeResource.addEventListener("click", () => {
     resourceInfo.style.display = "none";
 })
 
+discOre.addEventListener("click", () => {
+    discardResource("ore", 10);
+})
+discOxygen.addEventListener("click", () => {
+    discardResource("oxygen", 10);
+})
+discMetal.addEventListener("click", () => {
+    discardResource("metal", 10);
+})
 discWater.addEventListener("click", () => {
     discardResource("water", 10);
 })
@@ -668,6 +693,15 @@ function buy(machine) {
     }
 
     if (resources[machine.costType] >= machine.cost) {
+    function canAfford(machine) {
+        return (
+            machine &&
+            Number.isFinite(resources[machine.costType]) &&
+            Number.isFinite(machine.cost) &&
+            resources[machine.costType] >= machine.cost
+        );
+    }
+    if (canAfford(machine)) {
         resources[machine.costType] -= machine.cost;
 
         machine.bought = true;
@@ -721,7 +755,7 @@ function stageUp() {
     if (
         gameStage === 2 &&
         resources.metal >= 20 &&
-        resources.steam >= 15
+        steam.capacity >= 20
     ) {
         gameStage = 3;
         max = 40;
@@ -750,7 +784,7 @@ function loadStage() {
 
     const objectives = {
         1: "Build an Ice Extractor, Boiler, and Mine",
-        2: "Collect 20 metal and 15 steam",
+        2: "Build another Boiler, Warehouse, and collect 20 metal",
         3: "Reach 25% terraforming",
         4: "Reach 100% terraforming",
         5: "Keep a stable environment for 1 minute"
@@ -807,4 +841,124 @@ function checkWin() {
 function winGame() {
     play = false;
     alert("Mars has been successfully terraformed!");
+}
+
+
+//DISPLAY PIPES ----------------------------------------------------------
+function checkNeighbors(tile) {
+    const tiles = [...document.querySelectorAll("#map .tile")];
+
+    const index = tiles.indexOf(tile);
+    const columns = 5;
+
+    const neighbors = {
+        top: index - columns,
+        bottom: index + columns,
+        left: index % columns !== 0 ? index - 1 : -1,
+        right: index % columns !== columns - 1 ? index + 1 : -1
+    };
+
+    for (let direction in neighbors) {
+        const neighborIndex = neighbors[direction];
+
+        if (neighborIndex < 0 || neighborIndex >= tiles.length) {
+            continue;
+        }
+
+        const neighbor = tiles[neighborIndex];
+
+        // Check whether neighboring tile contains a machine image
+        if (neighbor.dataset.occupied === "true") {
+            createPipe(tile, direction);
+        }
+    }
+}
+
+function createPipe(tile, direction) {
+    // Prevent duplicate pipes
+    if (tile.querySelector(`.pipe-${direction}`)) {
+        return;
+    }
+
+    const pipe = document.createElement("img");
+
+    pipe.src = "images/pipe2.png";
+    pipe.className = `pipe pipe-${direction}`;
+
+    tile.appendChild(pipe);
+}
+
+function getNeighbors(tile) {
+    const tiles = [...document.querySelectorAll("#map .tile")];
+    const index = tiles.indexOf(tile);
+    const columns = 5;
+
+    if (index === -1) return [];
+
+    const neighbors = [];
+
+    // Above
+    if (index >= columns) {
+        neighbors.push(tiles[index - columns]);
+    }
+
+    // Below
+    if (index + columns < tiles.length) {
+        neighbors.push(tiles[index + columns]);
+    }
+
+    // Left
+    if (index % columns !== 0) {
+        neighbors.push(tiles[index - 1]);
+    }
+
+    // Right
+    if (index % columns !== columns - 1) {
+        neighbors.push(tiles[index + 1]);
+    }
+
+    return neighbors;
+}
+
+function isConnectedToBoiler(machine) {
+    if (!machine.location || !machine.placed) {
+        return false;
+    }
+
+    const visited = new Set();
+    const queue = [machine.location];
+
+    while (queue.length > 0) {
+        const currentTile = queue.shift();
+
+        if (visited.has(currentTile)) {
+            continue;
+        }
+
+        visited.add(currentTile);
+
+        // Check whether this tile contains a Boiler
+        const currentMachine = builtMachines.find(m =>
+            m.location === currentTile &&
+            m.placed
+        );
+
+        if (currentMachine?.name === "Boiler") {
+            return true;
+        }
+
+        // Check neighboring tiles
+        const neighbors = getNeighbors(currentTile);
+
+        for (const neighbor of neighbors) {
+            if (
+                neighbor.dataset.occupied === "true" &&
+                !visited.has(neighbor)
+            ) {
+                queue.push(neighbor);
+            }
+        }
+    }
+
+    return false;
 }

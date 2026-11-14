@@ -146,4 +146,51 @@ main{
 .shop-image img{
     max-width: 100px;
     max-height: 100px;
+
+
+#map .tile {
+    position: relative;
+    overflow: visible;
+}
+
+.pipe {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    object-fit: fill;
+}
+
+/* Horizontal pipes */
+.pipe-left,
+.pipe-right {
+    width: 20px;
+    height: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.pipe-left {
+    left: -20px;
+}
+
+.pipe-right {
+    right: -20px;
+}
+
+/* Vertical pipes */
+/* Vertical pipes */
+.pipe-top,
+.pipe-bottom {
+    width: 20px;
+    height: 12px;
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+}
+
+.pipe-top {
+    top: -16px;
+}
+
+.pipe-bottom {
+    bottom: -16px;
 }
