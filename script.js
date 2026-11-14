@@ -759,8 +759,16 @@ function loadShop(){
         machineEntry.innerHTML = `
             <div class="shop-details">
                 <h3>${formatMachineName(machine.name)}</h3>
-                <p>Cost: ${machine.cost} ${machine.costType}</p>
-                <p>Stage required: ${machine.stageRequired}</p>
+
+                <p>Purchase Cost: ${machine.cost} ${machine.costType}</p>
+
+                <p>Base Input: ${formatProduction(machine.inputs)}</p>
+                <p>Base Output: ${formatProduction(machine.outputs)}</p>
+
+                <p>Steam Required: ${machine.steamRequired}</p>
+
+                <p>Stage Required: ${machine.stageRequired}</p>
+
                 <p>Owned: ${machineCount} / ${MAX_MACHINES_PER_TYPE}</p>
             </div>
 
@@ -768,7 +776,7 @@ function loadShop(){
                 <img
                     src="images/${machine.name}.png"
                     alt="${formatMachineName(machine.name)}"
-                    >
+                >
             </div>
         `;
 
@@ -778,6 +786,18 @@ function loadShop(){
 
 function formatMachineName(machineName){
     return machineName.replace(/([a-z])([A-Z])/g, "$1 $2");
+}
+
+function formatProduction(items) {
+    const entries = Object.entries(items);
+
+    if (entries.length === 0) {
+        return "None";
+    }
+
+    return entries.map(([resource, amount]) => {
+        return `${amount} ${resource}`;
+    }).join(", ") + "/sec";
 }
 //PIPES ---------------------------------------------------------------------
 //STEAM ---------------------------------------------------------------------
@@ -1364,7 +1384,7 @@ function closeAlert() {
 
         showAlert(
             "How to Play",
-            "Use the Machine Shop to purchase machines. Select an empty tile to place a purchased machine. Machines produce resources over time, but some require steam from a Boiler. Use valve control to increase production speed. Use Warehouse Storage to free up space for new materials."
+            "Your mission is to transform the frozen wasteland of Mars into a habitable world using steam-powered machinery. Open the Machine Shop to purchase machines, then place them on empty tiles. Each machine produces resources or contributes to terraforming. Machines connect automatically through pipes when placed next to each other. Steam-powered machines must be connected to a Boiler to operate. Boilers provide limited steam power. Allocate steam between machines to control their production speed. More steam means faster production! Machines consume and produce materials. Your Warehouse has limited storage, so balance production, spending, and discarding resources to avoid running out of space. Complete stage objectives to unlock advanced machines. Increase the planet's temperature, pressure, atmosphere, and biosphere to transform its environment. Reach 100% terraforming progress to make Mars habitable and win the game!"
         );
 
         return;

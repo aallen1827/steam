@@ -827,3 +827,45 @@ button:focus-visible,
     line-height: 1.6;
     text-align: justify;
 }
+
+.shop-details h3 {
+    color: var(--ice);
+    margin: 0 0 10px;
+}
+
+.shop-details p {
+    color: white;
+    font-size: 14px;
+    margin: 5px 0;
+    line-height: 1.4;
+}
+
+.shop-item {
+    min-height: 140px;
+}
+
+.alert-content {
+    background-color: var(--rust);
+    border: 5px solid var(--copper);
+    border-radius: 12px;
+
+    padding: 30px;
+    width: 350px;
+    max-width: 85vw;
+
+    /* Scrolling */
+    max-height: 80vh;
+    overflow-y: auto;
+
+    text-align: center;
+    color: white;
+
+    box-shadow:
+        0 0 25px rgba(0, 0, 0, 0.6),
+        inset 0 0 15px rgba(0, 0, 0, 0.25);
+}
+
+.alert-content {
+    scrollbar-width: thin;
+    scrollbar-color: var(--copper) var(--iron);
+}
