@@ -16,8 +16,8 @@ main{
 .tile {
     width: 100%;
     aspect-ratio: 1/1;
-    color: black;
-    background-color: black;
+    color: #713321;
+    background-color: #713321;
     cursor: pointer;
     border-radius: 10%;
 
