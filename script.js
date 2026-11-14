@@ -339,6 +339,10 @@ function isBought(name) {
     );
 }
 
+function isUnlocked(machine) {
+    return gameStage >= machine.stageRequired;
+}
+
 
 
 
