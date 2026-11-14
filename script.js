@@ -175,6 +175,20 @@ machines = [
         steamAllocated: 0
     },
     {
+        name: "Warehouse",
+        costType: "metal",
+        cost: 10,
+        inputs: {},
+        outputs: {},
+        steamRequired: 0,
+        steamAllocated: 0,
+        stageRequired: 2,
+        storageBonus: 15,
+        bought: false,
+        placed: false,
+        active: true
+    },
+    {
         name: "AtmosphericProcessor",
         costType: "metal",
         cost: 30,
@@ -252,22 +266,7 @@ machines = [
         stageRequired: 4,
         steamRequired: 0,
         steamAllocated: 0
-    },
-    {
-        name: "Warehouse",
-        costType: "metal",
-        cost: 10,
-        inputs: {},
-        outputs: {},
-        steamRequired: 0,
-        steamAllocated: 0,
-        stageRequired: 2,
-        storageBonus: 15,
-        bought: false,
-        placed: false,
-        active: true
     }
-    
 ]
 
 const builtMachines = [];
@@ -386,8 +385,7 @@ function runMachine(machine) {
 
 function loadResource() {
     resourceBar.innerHTML = `<h1>Water: ${resources.water}</h1> <h1>Ore: ${resources.ore}</h1> <h1>Metal: ${resources.metal}</h1> <h1>Oxygen: ${resources.oxygen}</h1>`;
-    steamDisplay.innerHTML = `<h2>Warehouse: ${getStorageUsed()} / ${storage.capacity}</h2>
-        <p>Available: ${getStorageAvailable().toFixed(1)}</p>`;
+    steamDisplay.innerHTML = `<h2>Warehouse: ${getStorageUsed()} / ${storage.capacity}</h2>`;
 }
 
 function loadUnplacedMachineMenu(){
@@ -553,7 +551,8 @@ function removeSelectedMachine(){
     console.log(`${machine.name} removed from ${selectedTile.id}`);
 }
 
-function openShop(){
+function openShop() {
+    closeAllMenus();
     loadShop();
     shopMenu.hidden = false;
 }
@@ -698,12 +697,38 @@ function loadSteamMenu() {
 }
 
 steamButton.addEventListener("click", () => {
+    closeAllMenus();
     loadSteamMenu();
     steamMenu.hidden = false;
 });
 
 closeSteam.addEventListener("click", () => {
     steamMenu.hidden = true;
+});
+
+
+
+//POPUP menu stuff -------------------------------------------------------
+function closeAllMenus() {
+    resourceInfo.hidden = true;
+    steamMenu.hidden = true;
+    shopMenu.hidden = true;
+}
+
+document.addEventListener("click", (event) => {
+    const menus = [resourceInfo, steamMenu, shopMenu];
+
+    const clickedInsideMenu = menus.some(menu =>
+        menu.contains(event.target)
+    );
+
+    const clickedMenuButton = event.target.closest(
+        "#resourceButton, #steamButton, #buy"
+    );
+
+    if (!clickedInsideMenu && !clickedMenuButton) {
+        closeAllMenus();
+    };
 });
 
 
@@ -738,7 +763,9 @@ const discOxygen = document.querySelector("#oxygen");
 const resourceButton = document.querySelector("#resourceButton");
 const resourceInfo = document.querySelector("#resourceMenu");
 const closeResource = document.querySelector("#closeResource")
+
 resourceButton.addEventListener("click", () => {
+    closeAllMenus();
     loadStorageInfo();
     resourceInfo.hidden = false;
 });
@@ -841,7 +868,7 @@ const objectives = {
     2: "Build another Boiler, Warehouse, and collect 20 metal",
     3: "Reach 25% terraforming",
     4: "Reach 100% terraforming",
-    5: "Keep a stable environment for 1 minute"
+    5: "Keep a stable environment for 15 secondes"
 };
 
 function stageUp() {
@@ -862,7 +889,8 @@ function stageUp() {
     if (
         gameStage === 2 &&
         resources.metal >= 20 &&
-        steam.capacity >= 20
+        steam.capacity >= 20 &&
+        isBought("Warehouse")
     ) {
         gameStage = 3;
     }
@@ -941,7 +969,7 @@ function checkWin() {
         stabilityTime = 0;
     }
 
-    if (stabilityTime >= 5) {
+    if (stabilityTime >= 15) {
         winGame();
     }
 }
