@@ -1329,12 +1329,28 @@ const gameAlert = document.querySelector("#gameAlert");
 const alertTitle = document.querySelector("#alertTitle");
 const alertMessage = document.querySelector("#alertMessage");
 const alertClose = document.querySelector("#alertClose");
+const alertImage = document.querySelector("#alertImage");
 
 let showTutorialNext = false;
+
+let showGoodLuckNext = false;
 
 function showAlert(title, message) {
     alertTitle.textContent = title;
     alertMessage.textContent = message;
+
+    alertImage.hidden = true;
+    alertImage.removeAttribute("src");
+
+    gameAlert.hidden = false;
+}
+
+function showGoodLuckAlert() {
+    alertTitle.textContent = "Good Luck!";
+    alertMessage.textContent = "";
+
+    alertImage.src = "images/rocket.png";
+    alertImage.hidden = false;
 
     gameAlert.hidden = false;
 }
@@ -1344,11 +1360,19 @@ function closeAlert() {
 
     if (showTutorialNext) {
         showTutorialNext = false;
+        showGoodLuckNext = true;
 
         showAlert(
             "How to Play",
-            "Use the Shop to purchase new machines. Select an empty tile to place a purchased machine. Machines produce resources over time, but often require steam from a Boiler to function. Use Resources to adjust your storage and discard unnessisary resources. To edit your machines click on it and use the buttons that will appear. Enjoy this new world and make sure to mind your steam usage!"
+            "Use the Machine Shop to purchase machines. Select an empty tile to place a purchased machine. Machines produce resources over time, but some require steam from a Boiler."
         );
+
+        return;
+    }
+
+    if (showGoodLuckNext) {
+        showGoodLuckNext = false;
+        showGoodLuckAlert();
     }
 }
 
