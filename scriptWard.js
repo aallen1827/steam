@@ -96,11 +96,19 @@ tileMenu.addEventListener("click", function(event){
 
     if(action === "place"){
         placeSelectedMachine();
+        closeTileMenu();
+    }
+
+    if (action === "remove"){
+        removeSelectedMachine();
+        closeTileMenu();
+        return;
     }
 
     if (action === "inspect"){
         inspectSelectedTile();
     }
+    
 })
 
 //menu action button functions
