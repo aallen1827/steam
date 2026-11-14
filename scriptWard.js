@@ -92,8 +92,10 @@ function positionMenu(menuElement, tileElement){
     menuElement.style.top = `${menuY}px`
 }
 
-function showTileMenu(tileElement){
+function showTileMenu(tileElement) {
     unplacedMachineMenu.classList.remove("visible");
+
+    updateMachineMenuButton(tileElement);
 
     tileMenu.classList.add("visible");
 
@@ -134,24 +136,33 @@ tileMenu.addEventListener("click", function(event){
 
     const action = clickedButton.dataset.action;
 
+    if (action === "toggle-production") {
+        toggleMachineProduction();
+
+        const selectedTile =grid.querySelector(".tile.selected");
+
+        if (selectedTile) {
+            updateMachineMenuButton(selectedTile);
+    }
+
+    return;
+}
+
     if(action === "close"){
         closeTileMenu();
         return;
     }
 
-    if(action === "place"){
-        placeSelectedMachine();
-        closeTileMenu();
-    }
-
-    if (action === "remove"){
+    if (action === "remove") {
+    const removed =
         removeSelectedMachine();
-        closeTileMenu();
-        return;
+
+    if (removed) {
+        loadUnplacedMachineMenu();
     }
 
-    if (action === "inspect"){
-        inspectSelectedTile();
+    closeTileMenu();
+    return;
     }
     
 })
@@ -163,6 +174,36 @@ function inspectSelectedTile(){
     }
 
     console.log(`Inspecting tile ${selectedTileId}`)
+}
+
+//stop/start production
+function updateMachineMenuButton(tileElement) {
+    const machine = builtMachines.find(machine =>
+        machine.location === tileElement &&
+        machine.placed === true
+    );
+
+    const toggleButton =
+        tileMenu.querySelector("#toggle-production-button");
+
+    if (!machine || !toggleButton) {
+        return;
+    }
+
+    if (
+        machine.name === "Boiler" ||
+        machine.name === "Warehouse"
+    ) {
+        toggleButton.hidden = true;
+        return;
+    }
+
+    toggleButton.hidden = false;
+
+    toggleButton.textContent =
+        machine.active
+            ? "Stop Production"
+            : "Start Production";
 }
 
 //close popup menu
