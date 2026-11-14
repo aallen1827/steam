@@ -70,6 +70,27 @@ closeShopButton.addEventListener("click", () => {
     closeShop();
 });
 
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        closeShop();
+    }
+});
+
+document.addEventListener("click", function(event) {
+    const clickedInsideShop =
+        event.target.closest("#shopMenu");
+
+    const clickedOpenShopButton =
+        event.target.closest("#buy");
+
+    if (
+        !clickedInsideShop &&
+        !clickedOpenShopButton
+    ) {
+        closeShop();
+    }
+});
+
 shopItems.addEventListener("click", function(event){
     const selectedShopItem = event.target.closest(".shop-item");
 
