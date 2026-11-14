@@ -16,20 +16,18 @@ main{
 .tile {
     width: 100%;
     aspect-ratio: 1/1;
-    color: none;
-    background-color: none;
+    background-color: rgba(0, 0, 0, 0.15);
     cursor: pointer;
     border-radius: 10%;
-
 }
 
-.tile:hover{
-    background-color: #606060;
+.tile:hover {
+    background-color: rgba(0, 0, 0, 0.30);
     scale: 1.05;
 }
 
 .tile.selected {
-    background-color: #606060;
+    background-color: rgba(0, 0, 0, 0.30);
 }
 
 .tile p {
@@ -41,8 +39,11 @@ main{
     display: flex;
 }
 
-.tile img {
-    max-width: 100%;
+.tile .machine-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 /* Tile Popup Menu */
@@ -61,7 +62,7 @@ main{
 }
 
 .tile.selected{
-    background-color: #606060;
+    background-color: rgba(0, 0, 0, 0.30);
 }
 
 .tile-menu-popup.visible{
@@ -155,44 +156,41 @@ main{
 
 .pipe {
     position: absolute;
-    z-index: 5;
+    width: 36px;
+    height: 48px;
+    z-index: 3;
     pointer-events: none;
-    object-fit: fill;
+    object-fit: contain;
 }
 
 /* Horizontal pipes */
 .pipe-left,
 .pipe-right {
-    width: 20px;
-    height: 12px;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) rotate(90deg);
 }
 
 .pipe-left {
-    left: -20px;
+    left: calc(-1 * var(--pipe-gap) / 2 - 18px);
 }
 
 .pipe-right {
-    right: -20px;
+    right: calc(-1 * var(--pipe-gap) / 2 - 18px);
 }
 
-/* Vertical pipes */
 /* Vertical pipes */
 .pipe-top,
 .pipe-bottom {
-    width: 20px;
-    height: 12px;
     left: 50%;
-    transform: translateX(-50%) rotate(90deg);
+    transform: translateX(-50%);
 }
 
 .pipe-top {
-    top: -16px;
+    top: calc(-1 * var(--pipe-gap) / 2 - 24px);
 }
 
 .pipe-bottom {
-    bottom: -16px;
+    bottom: calc(-1 * var(--pipe-gap) / 2 - 24px);
 }
 
 #map {
@@ -204,4 +202,7 @@ main{
     background-repeat: no-repeat;
 
     z-index: 0;
+
+    --pipe-gap: 20px;
+    gap: var(--pipe-gap);
 }
