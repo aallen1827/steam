@@ -11,6 +11,18 @@
     aspect-ratio: 1/1;
     color: black;
     background-color: black;
+    cursor: pointer;
+    border-radius: 10%;
+
+}
+
+.tile:hover{
+    background-color: #606060;
+    scale: 1.05;
+}
+
+.tile.selected {
+    background-color: #606060;
 }
 
 .tile p {
@@ -24,4 +36,25 @@
 
 .tile img {
     max-width: 100%;
+}
+
+/* Tile Popup Menu */
+
+.tile-menu-popup{
+    position: fixed;
+    display: none;
+    z-index: 1000;
+
+    min-width: 140px;
+    padding:8px;
+
+    background-color: #252525;
+    border: 2px solid #000000;
+    border-radius: 10%;
+}
+
+.tile-menu-popup.visible{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
