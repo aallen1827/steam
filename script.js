@@ -26,6 +26,7 @@ const steamDisplay = document.querySelector("#steam");
 const shopMenu = document.querySelector("#shopMenu");
 const shopItems = document.querySelector("#shopItems");
 const closeShopButton = document.querySelector("#closeShop");
+const map = document.querySelector("#map");
 
 
 
@@ -726,7 +727,9 @@ function buy(machine) {
 
 function isBought(name) {
     return machines.some(machine =>
-        machine.name === name && machine.bought
+        machine.name === name &&
+        machine.bought &&
+        machine.placed
     );
 }
 
@@ -778,6 +781,7 @@ function stageUp() {
     ) {
         gameStage = 5;
     }
+    map.style.backgroundImage = `url("images/stage_${gameStage}.png")`;
 }
 
 function loadStage() {
@@ -883,7 +887,7 @@ function createPipe(tile, direction) {
 
     const pipe = document.createElement("img");
 
-    pipe.src = "images/pipe2.png";
+    pipe.src = "images/pipe.png";
     pipe.className = `pipe pipe-${direction}`;
 
     tile.appendChild(pipe);
