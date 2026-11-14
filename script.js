@@ -26,6 +26,7 @@ const steamDisplay = document.querySelector("#steam");
 const shopMenu = document.querySelector("#shopMenu");
 const shopItems = document.querySelector("#shopItems");
 const closeShopButton = document.querySelector("#closeShop");
+const map = document.querySelector("#map");
 
 
 
@@ -62,10 +63,6 @@ var max = 20;
 var machineToPlace = null;
 
 //-------------------------------- Test Event Listeners ----------------------------
-a1.addEventListener("click", () => {
-    resources.water -= 5;
-    loadResource();
-});
 buyButton.addEventListener("click", () => {
     openShop();
 });
@@ -283,9 +280,8 @@ var play = true;
 //resource incrementing
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function timePass() {
-    //checks for machines []
-    //resources increase/decrease [x]
-    //timout [x]
+    startGame();
+    
     while (play == true) {
         builtMachines.forEach(machine => {
             runMachine(machine);
@@ -749,13 +745,22 @@ discWater.addEventListener("click", () => {
 
 
 //SPENDING ------------------------------------------------------------------
+function canAfford(machine) {
+    return (
+        machine &&
+        Number.isFinite(resources[machine.costType]) &&
+        Number.isFinite(machine.cost) &&
+        resources[machine.costType] >= machine.cost
+    );
+}
+
 function buy(machine) {
     if (!machine) {
         return;
     }
 
-    if (!isUnlocked(machine)){
-        return
+    if (!isUnlocked(machine)) {
+        return;
     }
 
     if (resources[machine.costType] < machine.cost) {
@@ -799,11 +804,15 @@ function createMachineInstance(machineType){
             ...machineType.outputs
         }
     };
+
+    loadResource();
 }
 
 function isBought(name) {
     return machines.some(machine =>
-        machine.name === name && machine.bought
+        machine.name === name &&
+        machine.bought &&
+        machine.placed
     );
 }
 
@@ -815,11 +824,19 @@ function isUnlocked(machine) {
 
 
 //Stages ----------------------------------------------------------------
+const objectives = {
+    1: "Build an Ice Extractor, Boiler, and Mine",
+    2: "Build another Boiler, Warehouse, and collect 20 metal",
+    3: "Reach 25% terraforming",
+    4: "Reach 100% terraforming",
+    5: "Keep a stable environment for 1 minute"
+};
 
 function stageUp() {
+    const previousStage = gameStage;
     const progress = getTerraformProgress();
 
-    // Stage 2: Build the first three machines
+    // Stage 2
     if (
         gameStage === 1 &&
         isBought("IceExtractor") &&
@@ -829,44 +846,45 @@ function stageUp() {
         gameStage = 2;
     }
 
-    // Stage 3: Reach resource requirements
+    // Stage 3
     if (
         gameStage === 2 &&
         resources.metal >= 20 &&
         steam.capacity >= 20
     ) {
         gameStage = 3;
-        max = 40;
     }
 
-    // Stage 4: Reach 45% terraforming
+    // Stage 4
     if (
         gameStage === 3 &&
         progress >= 25
     ) {
         gameStage = 4;
-        max = 60;
     }
 
-    // Stage 5: Reach 100% terraforming
+    // Stage 5
     if (
         gameStage === 4 &&
         progress >= 100
     ) {
         gameStage = 5;
     }
+
+    // Only execute when the stage changes
+    if (gameStage !== previousStage) {
+        map.style.backgroundImage =
+            `url("images/stage_${gameStage}.png")`;
+
+        showAlert(
+            `Stage ${gameStage} Unlocked!`,
+            objectives[gameStage]
+        );
+    }
 }
 
 function loadStage() {
     const stageDisplay = document.querySelector("#stageDisplay");
-
-    const objectives = {
-        1: "Build an Ice Extractor, Boiler, and Mine",
-        2: "Build another Boiler, Warehouse, and collect 20 metal",
-        3: "Reach 25% terraforming",
-        4: "Reach 100% terraforming",
-        5: "Keep a stable environment for 1 minute"
-    };
 
     stageDisplay.innerHTML = `
         <h2>Stage ${gameStage}</h2>
@@ -918,7 +936,10 @@ function checkWin() {
 
 function winGame() {
     play = false;
-    alert("Mars has been successfully terraformed!");
+    showAlert(
+        "Victory!",
+        "Mars has been successfully terraformed!"
+    );
 }
 
 
@@ -960,7 +981,7 @@ function createPipe(tile, direction) {
 
     const pipe = document.createElement("img");
 
-    pipe.src = "images/pipe2.png";
+    pipe.src = "images/pipe.png";
     pipe.className = `pipe pipe-${direction}`;
 
     tile.appendChild(pipe);
@@ -1040,3 +1061,32 @@ function isConnectedToBoiler(machine) {
 
     return false;
 }
+
+//ALERTS ----------------------------------------------------
+const gameAlert = document.querySelector("#gameAlert");
+const alertTitle = document.querySelector("#alertTitle");
+const alertMessage = document.querySelector("#alertMessage");
+const alertClose = document.querySelector("#alertClose");
+
+function showAlert(title, message) {
+    alertTitle.textContent = title;
+    alertMessage.textContent = message;
+
+    gameAlert.hidden = false;
+}
+
+function closeAlert() {
+    gameAlert.hidden = true;
+}
+
+alertClose.addEventListener("click", closeAlert);
+
+
+
+//GAME START ---------------------------------------------------
+function startGame() {
+    showAlert("Welcome to Mars!", "Your mission is to transform Mars into a habitable planet. Good luck!");
+}
+
+//game runs
+timePass();
