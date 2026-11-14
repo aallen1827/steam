@@ -285,6 +285,13 @@ function runMachine(machine) {
         return;
     }
 
+    if (
+        machine.steamRequired > 0 &&
+        !isConnectedToBoiler(machine)
+    ) {
+        return;
+    }
+
     const efficiency = getEfficiency(machine);
 
     if (efficiency <= 0) return;
@@ -794,4 +801,79 @@ function createPipe(tile, direction) {
     pipe.className = `pipe pipe-${direction}`;
 
     tile.appendChild(pipe);
+}
+
+function getNeighbors(tile) {
+    const tiles = [...document.querySelectorAll("#map .tile")];
+    const index = tiles.indexOf(tile);
+    const columns = 5;
+
+    if (index === -1) return [];
+
+    const neighbors = [];
+
+    // Above
+    if (index >= columns) {
+        neighbors.push(tiles[index - columns]);
+    }
+
+    // Below
+    if (index + columns < tiles.length) {
+        neighbors.push(tiles[index + columns]);
+    }
+
+    // Left
+    if (index % columns !== 0) {
+        neighbors.push(tiles[index - 1]);
+    }
+
+    // Right
+    if (index % columns !== columns - 1) {
+        neighbors.push(tiles[index + 1]);
+    }
+
+    return neighbors;
+}
+
+function isConnectedToBoiler(machine) {
+    if (!machine.location || !machine.placed) {
+        return false;
+    }
+
+    const visited = new Set();
+    const queue = [machine.location];
+
+    while (queue.length > 0) {
+        const currentTile = queue.shift();
+
+        if (visited.has(currentTile)) {
+            continue;
+        }
+
+        visited.add(currentTile);
+
+        // Check whether this tile contains a Boiler
+        const currentMachine = builtMachines.find(m =>
+            m.location === currentTile &&
+            m.placed
+        );
+
+        if (currentMachine?.name === "Boiler") {
+            return true;
+        }
+
+        // Check neighboring tiles
+        const neighbors = getNeighbors(currentTile);
+
+        for (const neighbor of neighbors) {
+            if (
+                neighbor.dataset.occupied === "true" &&
+                !visited.has(neighbor)
+            ) {
+                queue.push(neighbor);
+            }
+        }
+    }
+
+    return false;
 }
