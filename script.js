@@ -1321,6 +1321,8 @@ const alertTitle = document.querySelector("#alertTitle");
 const alertMessage = document.querySelector("#alertMessage");
 const alertClose = document.querySelector("#alertClose");
 
+let showTutorialNext = false;
+
 function showAlert(title, message) {
     alertTitle.textContent = title;
     alertMessage.textContent = message;
@@ -1330,6 +1332,15 @@ function showAlert(title, message) {
 
 function closeAlert() {
     gameAlert.hidden = true;
+
+    if (showTutorialNext) {
+        showTutorialNext = false;
+
+        showAlert(
+            "How to Play",
+            "Use the Shop to purchase new machines. Select an empty tile to place a purchased machine. Machines produce resources over time, but often require steam from a Boiler to function. Use Resources to adjust your storage and discard unnessisary resources. To edit your machines click on it and use the buttons that will appear. Enjoy this new world and make sure to mind your steam usage!"
+        );
+    }
 }
 
 alertClose.addEventListener("click", closeAlert);
@@ -1338,7 +1349,12 @@ alertClose.addEventListener("click", closeAlert);
 
 //GAME START ---------------------------------------------------
 function startGame() {
-    showAlert("Welcome to Mars!", "Your mission is to transform Mars into a habitable planet. Good luck!");
+    showTutorialNext = true;
+
+    showAlert(
+        "Welcome to Mars!",
+        "Your mission is to transform Mars into a habitable planet. Good luck!"
+    );
 }
 
 //game runs
