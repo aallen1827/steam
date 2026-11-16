@@ -944,12 +944,14 @@ function getStorageAvailable() {
 
 //discard resources
 function discardResource(resource, amount) {
-    resources[resource] = Math.max(
-        0,
-        resources[resource] - amount
-    );
-    loadResource();
-    loadStorageInfo();
+    if (gameStage != 1) {
+        resources[resource] = Math.max(
+            0,
+            resources[resource] - amount
+        );
+        loadResource();
+        loadStorageInfo();
+    }
 }
 
 const discWater = document.querySelector("#water");
@@ -1120,6 +1122,10 @@ function stageUp() {
         gameStage = 4;
     }
 
+    if (gameStage == 4 && progress == 100) {
+        gameStage = 5;
+    }
+
     // Only execute when the stage changes
     if (gameStage !== previousStage) {
         map.style.backgroundImage =
@@ -1184,7 +1190,7 @@ function createProgressBar(name, value) {
 }
 
 function checkWin() {
-    if (gameStage !== 4) {
+    if (gameStage !== 5) {
         return;
     }
 
